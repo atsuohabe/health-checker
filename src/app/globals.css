@@ -1,0 +1,5 @@
+@import "tailwindcss";
+
+@theme inline {
+  --font-sans: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", system-ui, sans-serif;
+}

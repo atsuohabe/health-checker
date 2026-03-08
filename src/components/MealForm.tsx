@@ -7,6 +7,14 @@ import { MealType, Nutrition, MealEntry } from '@/types';
 import { analyzeFood, resizeImage } from '@/lib/gemini';
 import { MEAL_TYPES } from '@/lib/constants';
 
+function generateId(): string {
+  try {
+    return crypto.randomUUID();
+  } catch {
+    return Date.now().toString(36) + Math.random().toString(36).slice(2, 10);
+  }
+}
+
 interface Props {
   onSave: (meal: MealEntry) => void | Promise<void>;
   editMeal?: MealEntry | null;
@@ -69,7 +77,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const handleSave = async () => {
     if (saving) return;
     const meal: MealEntry = {
-      id: editMeal?.id || crypto.randomUUID(),
+      id: editMeal?.id || generateId(),
       type: mealType,
       description,
       photoBase64,
@@ -158,7 +166,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       >
         {analyzing ? t('log.analyzing') : t('log.analyze')}
       </button>
-      {error && <p className="text-red-500 text-sm">{error}</p>}
+      {error && <p className="text-red-600 text-sm font-medium bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 
       {/* Nutrition Editor */}
       <div>

@@ -31,6 +31,7 @@ export interface UserProfile {
   height?: number;
   birthYear?: number;
   gender?: Gender;
+  goalPreset?: string;
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;

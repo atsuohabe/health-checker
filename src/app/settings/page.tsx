@@ -21,6 +21,7 @@ export default function SettingsPage() {
   const [height, setHeight] = useState<number | undefined>(undefined);
   const [birthYear, setBirthYear] = useState<number | undefined>(undefined);
   const [gender, setGender] = useState<Gender | undefined>(undefined);
+  const [goalPreset, setGoalPreset] = useState('');
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
   const [hasServerKey, setHasServerKey] = useState(false);
@@ -48,6 +49,7 @@ export default function SettingsPage() {
       setHeight(profile.height);
       setBirthYear(profile.birthYear);
       setGender(profile.gender);
+      setGoalPreset(profile.goalPreset || '');
       setApiKey(profile.geminiApiKey || '');
     }
   }, [profile]);
@@ -61,6 +63,7 @@ export default function SettingsPage() {
       height: height || null,
       birthYear: birthYear || null,
       gender: gender || null,
+      goalPreset: goalPreset || null,
       targetCalories,
       targetProtein,
       targetCarbs,
@@ -88,6 +91,7 @@ export default function SettingsPage() {
 
   // Apply preset with body-stats adjustment
   const applyPreset = (presetKey: string) => {
+    setGoalPreset(presetKey);
     const basePresets: Record<string, { cal: number; p: number; c: number; f: number; activityFactor: number }> = {
       diet:        { cal: 1400, p: 60,  c: 150, f: 40, activityFactor: 1.2 },
       gentle_diet: { cal: 1700, p: 70,  c: 200, f: 45, activityFactor: 1.3 },
@@ -297,7 +301,7 @@ export default function SettingsPage() {
         <div>
           <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.goalPreset')}</label>
           <select
-            defaultValue=""
+            value={goalPreset}
             onChange={e => applyPreset(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           >

@@ -5,7 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
 import { saveUserProfile, getAllRecords, getRecordsInRange } from '@/lib/firestore';
-import { Language } from '@/types';
+import { Language, Gender } from '@/types';
 
 export default function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -18,11 +18,15 @@ export default function SettingsPage() {
   const [targetProtein, setTargetProtein] = useState(60);
   const [targetCarbs, setTargetCarbs] = useState(250);
   const [targetFat, setTargetFat] = useState(55);
+  const [height, setHeight] = useState<number | undefined>(undefined);
+  const [age, setAge] = useState<number | undefined>(undefined);
+  const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
   const [hasServerKey, setHasServerKey] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [optimizeMsg, setOptimizeMsg] = useState('');
+  const [records, setRecords] = useState<import('@/types').DailyRecord[]>([]);
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -41,6 +45,9 @@ export default function SettingsPage() {
       setTargetProtein(profile.targetProtein);
       setTargetCarbs(profile.targetCarbs);
       setTargetFat(profile.targetFat);
+      setHeight(profile.height);
+      setAge(profile.age);
+      setGender(profile.gender);
       setApiKey(profile.geminiApiKey || '');
     }
   }, [profile]);
@@ -51,6 +58,9 @@ export default function SettingsPage() {
     const data: Record<string, unknown> = {
       nickname,
       language: lang,
+      height: height || null,
+      age: age || null,
+      gender: gender || null,
       targetCalories,
       targetProtein,
       targetCarbs,
@@ -66,6 +76,58 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  // Estimate BMR using Mifflin-St Jeor if body stats available
+  const estimateBmr = (w?: number) => {
+    if (!height || !age) return null;
+    const weightKg = w || 60;
+    if (gender === 'male') return 10 * weightKg + 6.25 * height - 5 * age + 5;
+    if (gender === 'female') return 10 * weightKg + 6.25 * height - 5 * age - 161;
+    return 10 * weightKg + 6.25 * height - 5 * age - 78; // average for 'other'
+  };
+
+  // Apply preset with body-stats adjustment
+  const applyPreset = (presetKey: string) => {
+    const basePresets: Record<string, { cal: number; p: number; c: number; f: number; activityFactor: number }> = {
+      diet:        { cal: 1400, p: 60,  c: 150, f: 40, activityFactor: 1.2 },
+      gentle_diet: { cal: 1700, p: 70,  c: 200, f: 45, activityFactor: 1.3 },
+      maintain:    { cal: 2000, p: 60,  c: 250, f: 55, activityFactor: 1.5 },
+      muscle:      { cal: 2500, p: 130, c: 300, f: 60, activityFactor: 1.6 },
+      lean_bulk:   { cal: 2200, p: 120, c: 250, f: 50, activityFactor: 1.55 },
+      cut_fat:     { cal: 1600, p: 110, c: 130, f: 45, activityFactor: 1.4 },
+      active:      { cal: 2800, p: 100, c: 350, f: 70, activityFactor: 1.75 },
+    };
+    const preset = basePresets[presetKey];
+    if (!preset) return;
+
+    // Get latest weight from records if available
+    const latestWeight = records.find(r => r.weight)?.weight;
+    const bmr = estimateBmr(latestWeight);
+
+    if (bmr) {
+      // Use BMR * activity factor, then distribute macros proportionally
+      const tdee = Math.round(bmr * preset.activityFactor);
+      // Adjust calorie target based on goal type
+      let calTarget: number;
+      if (['diet', 'cut_fat'].includes(presetKey)) calTarget = Math.round((tdee - 500) / 100) * 100;
+      else if (presetKey === 'gentle_diet') calTarget = Math.round((tdee - 300) / 100) * 100;
+      else if (['muscle', 'lean_bulk', 'active'].includes(presetKey)) calTarget = Math.round((tdee + 200) / 100) * 100;
+      else calTarget = Math.round(tdee / 100) * 100;
+
+      // Scale macros proportionally from preset baseline
+      const ratio = calTarget / preset.cal;
+      setTargetCalories(Math.max(1000, calTarget));
+      setTargetProtein(Math.max(10, Math.round(preset.p * ratio / 10) * 10));
+      setTargetCarbs(Math.max(50, Math.round(preset.c * ratio / 10) * 10));
+      setTargetFat(Math.max(10, Math.round(preset.f * ratio / 10) * 10));
+    } else {
+      // No body stats - use preset defaults
+      setTargetCalories(preset.cal);
+      setTargetProtein(preset.p);
+      setTargetCarbs(preset.c);
+      setTargetFat(preset.f);
+    }
+  };
+
   const handleOptimize = async () => {
     setOptimizing(true);
     setOptimizeMsg('');
@@ -74,12 +136,9 @@ export default function SettingsPage() {
       const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
       const start = new Date(now);
       start.setDate(start.getDate() - 30);
-      const records = await getRecordsInRange(
-        user.uid,
-        toLocal(start),
-        toLocal(now)
-      );
-      const daysWithMeals = records.filter(r => r.meals.length > 0);
+      const recs = await getRecordsInRange(user.uid, toLocal(start), toLocal(now));
+      setRecords(recs);
+      const daysWithMeals = recs.filter(r => r.meals.length > 0);
       if (daysWithMeals.length < 3) {
         setOptimizeMsg(t('settings.optimizeNoData'));
         return;
@@ -96,17 +155,34 @@ export default function SettingsPage() {
         )
       );
       const avg = {
-        calories: totals.reduce((s, t) => s + t.calories, 0) / totals.length,
-        protein: totals.reduce((s, t) => s + t.protein, 0) / totals.length,
-        carbs: totals.reduce((s, t) => s + t.carbs, 0) / totals.length,
-        fat: totals.reduce((s, t) => s + t.fat, 0) / totals.length,
+        calories: totals.reduce((s, v) => s + v.calories, 0) / totals.length,
+        protein: totals.reduce((s, v) => s + v.protein, 0) / totals.length,
+        carbs: totals.reduce((s, v) => s + v.carbs, 0) / totals.length,
+        fat: totals.reduce((s, v) => s + v.fat, 0) / totals.length,
       };
-      // Round to nearest step
-      setTargetCalories(Math.round(avg.calories / 100) * 100);
-      setTargetProtein(Math.round(avg.protein / 10) * 10);
-      setTargetCarbs(Math.round(avg.carbs / 10) * 10);
-      setTargetFat(Math.round(avg.fat / 10) * 10);
-      setOptimizeMsg(t('settings.optimizeDone', { days: String(daysWithMeals.length) }));
+
+      // If body stats available, blend past average with BMR-based estimate
+      const latestWeight = recs.find(r => r.weight)?.weight;
+      const bmr = estimateBmr(latestWeight);
+      let details = '';
+
+      if (bmr) {
+        const tdee = bmr * 1.5; // moderate activity assumption
+        // Blend: 60% past data, 40% BMR-based
+        const blended = Math.round((avg.calories * 0.6 + tdee * 0.4) / 100) * 100;
+        const ratio = blended / (avg.calories || 1);
+        setTargetCalories(blended);
+        setTargetProtein(Math.round(avg.protein * ratio / 10) * 10);
+        setTargetCarbs(Math.round(avg.carbs * ratio / 10) * 10);
+        setTargetFat(Math.round(avg.fat * ratio / 10) * 10);
+        details = ` (BMR: ${Math.round(bmr)} kcal)`;
+      } else {
+        setTargetCalories(Math.round(avg.calories / 100) * 100);
+        setTargetProtein(Math.round(avg.protein / 10) * 10);
+        setTargetCarbs(Math.round(avg.carbs / 10) * 10);
+        setTargetFat(Math.round(avg.fat / 10) * 10);
+      }
+      setOptimizeMsg(t('settings.optimizeDone', { days: String(daysWithMeals.length) }) + details);
     } catch {
       setOptimizeMsg(t('settings.optimizeError'));
     } finally {
@@ -150,6 +226,50 @@ export default function SettingsPage() {
           />
         </div>
 
+        {/* Body Stats */}
+        <div className="grid grid-cols-3 gap-2">
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.gender')}</label>
+            <select
+              value={gender || ''}
+              onChange={e => setGender((e.target.value || undefined) as Gender | undefined)}
+              className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              <option value="">{t('settings.unset')}</option>
+              <option value="male">{t('settings.male')}</option>
+              <option value="female">{t('settings.female')}</option>
+              <option value="other">{t('settings.otherGender')}</option>
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.age')}</label>
+            <select
+              value={age || ''}
+              onChange={e => setAge(e.target.value ? Number(e.target.value) : undefined)}
+              className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              <option value="">{t('settings.unset')}</option>
+              {Array.from({ length: 83 }, (_, i) => i + 8).map(v => (
+                <option key={v} value={v}>{v}</option>
+              ))}
+            </select>
+          </div>
+          <div>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.height')}</label>
+            <select
+              value={height || ''}
+              onChange={e => setHeight(e.target.value ? Number(e.target.value) : undefined)}
+              className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+            >
+              <option value="">{t('settings.unset')}</option>
+              {Array.from({ length: 81 }, (_, i) => i + 120).map(v => (
+                <option key={v} value={v}>{v} cm</option>
+              ))}
+            </select>
+          </div>
+        </div>
+        <p className="text-xs text-gray-400">{t('settings.bodyStatsHelp')}</p>
+
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language')}</label>
           <div className="grid grid-cols-2 gap-2">
@@ -177,24 +297,7 @@ export default function SettingsPage() {
           <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.goalPreset')}</label>
           <select
             defaultValue=""
-            onChange={e => {
-              const presets: Record<string, { cal: number; p: number; c: number; f: number }> = {
-                diet:        { cal: 1400, p: 60,  c: 150, f: 40 },
-                gentle_diet: { cal: 1700, p: 70,  c: 200, f: 45 },
-                maintain:    { cal: 2000, p: 60,  c: 250, f: 55 },
-                muscle:      { cal: 2500, p: 130, c: 300, f: 60 },
-                lean_bulk:   { cal: 2200, p: 120, c: 250, f: 50 },
-                cut_fat:     { cal: 1600, p: 110, c: 130, f: 45 },
-                active:      { cal: 2800, p: 100, c: 350, f: 70 },
-              };
-              const p = presets[e.target.value];
-              if (p) {
-                setTargetCalories(p.cal);
-                setTargetProtein(p.p);
-                setTargetCarbs(p.c);
-                setTargetFat(p.f);
-              }
-            }}
+            onChange={e => applyPreset(e.target.value)}
             className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
           >
             <option value="" disabled>{t('settings.goalPlaceholder')}</option>

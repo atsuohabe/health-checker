@@ -23,9 +23,14 @@ export interface DailyRecord {
   meals: MealEntry[];
 }
 
+export type Gender = 'male' | 'female' | 'other';
+
 export interface UserProfile {
   nickname: string;
   language: Language;
+  height?: number;
+  age?: number;
+  gender?: Gender;
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;

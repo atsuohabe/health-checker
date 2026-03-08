@@ -197,7 +197,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         )}
         <button
           onClick={handleSave}
-          disabled={!description.trim() || saving}
+          disabled={(!description.trim() && !photoBase64) || saving}
           className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {saving ? t('common.loading') : saved ? t('log.saved') : t('log.save')}

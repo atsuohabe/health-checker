@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
@@ -20,9 +20,11 @@ export default function SettingsPage() {
   const [targetFat, setTargetFat] = useState(55);
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
+  const initialized = useRef(false);
 
   useEffect(() => {
-    if (profile) {
+    if (profile && !initialized.current) {
+      initialized.current = true;
       setNickname(profile.nickname);
       setLang(profile.language);
       setTargetCalories(profile.targetCalories);

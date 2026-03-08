@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect, createContext, useContext } from 'react';
-import { User, onAuthStateChanged, signInWithPopup, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
+import { User, onAuthStateChanged, signInWithRedirect, getRedirectResult, GoogleAuthProvider, signOut as firebaseSignOut } from 'firebase/auth';
 import { getFirebaseAuth } from '@/lib/firebase';
 import { getUserProfile, saveUserProfile } from '@/lib/firestore';
 import { UserProfile } from '@/types';
@@ -42,7 +42,12 @@ export function useAuthProvider(): AuthState {
   };
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(getFirebaseAuth(), async (u) => {
+    const auth = getFirebaseAuth();
+
+    // Handle redirect result after returning from Google sign-in
+    getRedirectResult(auth).catch(console.error);
+
+    const unsubscribe = onAuthStateChanged(auth, async (u) => {
       setUser(u);
       if (u) {
         const p = await getUserProfile(u.uid);
@@ -57,7 +62,7 @@ export function useAuthProvider(): AuthState {
 
   const signInWithGoogle = async () => {
     const provider = new GoogleAuthProvider();
-    await signInWithPopup(getFirebaseAuth(), provider);
+    await signInWithRedirect(getFirebaseAuth(), provider);
   };
 
   const signOut = async () => {

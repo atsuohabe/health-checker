@@ -90,6 +90,7 @@
     "targets": "Daily Targets",
     "geminiApiKey": "Gemini API Key",
     "apiKeyPlaceholder": "Enter API key",
+    "apiKeyServerSet": "API key is configured on the server (no individual setup needed)",
     "apiKeyHelp": "Can also be set via environment variable",
     "save": "Save",
     "saved": "Saved",

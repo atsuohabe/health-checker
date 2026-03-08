@@ -90,6 +90,7 @@
     "targets": "目標値",
     "geminiApiKey": "Gemini APIキー",
     "apiKeyPlaceholder": "APIキーを入力",
+    "apiKeyServerSet": "サーバー側でAPIキーが設定済みです（個別設定は不要です）",
     "apiKeyHelp": "環境変数でも設定可能です",
     "save": "保存",
     "saved": "保存しました",

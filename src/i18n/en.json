@@ -123,6 +123,7 @@
     "goalLeanBulk": "Lean bulk (2200 kcal)",
     "goalCutFat": "Cut body fat (1600 kcal)",
     "goalActive": "High activity level (2800 kcal)",
+    "darkMode": "Dark Mode",
     "goalHelp": "Selecting a goal auto-fills the targets below. Press Save to apply.",
     "optimizeTargets": "Optimize targets from past data",
     "optimizeNoData": "Not enough data (at least 3 days required)",

@@ -33,6 +33,7 @@ export interface UserProfile {
   birthYear?: number;
   gender?: Gender;
   goalPreset?: string;
+  darkMode?: boolean;
   targetCalories: number;
   targetProtein: number;
   targetCarbs: number;

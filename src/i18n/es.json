@@ -123,6 +123,7 @@
     "goalLeanBulk": "Volumen limpio (2200 kcal)",
     "goalCutFat": "Reducir grasa corporal (1600 kcal)",
     "goalActive": "Alta actividad física (2800 kcal)",
+    "darkMode": "Modo oscuro",
     "goalHelp": "Al seleccionar un objetivo se rellenan los valores automáticamente. Pulsa Guardar para aplicar.",
     "optimizeTargets": "Optimizar objetivos con datos pasados",
     "optimizeNoData": "Datos insuficientes (se necesitan al menos 3 días)",

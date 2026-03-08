@@ -123,6 +123,7 @@
     "goalLeanBulk": "リーンバルクしたい（2200 kcal）",
     "goalCutFat": "体脂肪を落としたい（1600 kcal）",
     "goalActive": "運動量が多い（2800 kcal）",
+    "darkMode": "ダークモード",
     "goalHelp": "選択すると目標値が自動で設定されます。保存を押して反映してください。",
     "optimizeTargets": "過去データから目標値を最適化",
     "optimizeNoData": "データが不足しています（最低3日分必要）",

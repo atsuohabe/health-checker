@@ -123,6 +123,7 @@
     "goalLeanBulk": "精實增肌（2200 kcal）",
     "goalCutFat": "想減體脂（1600 kcal）",
     "goalActive": "高運動量（2800 kcal）",
+    "darkMode": "深色模式",
     "goalHelp": "選擇目標後會自動填入下方數值，請按儲存以套用。",
     "optimizeTargets": "根據過去資料優化目標值",
     "optimizeNoData": "資料不足（至少需要3天）",

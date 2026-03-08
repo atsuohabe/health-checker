@@ -22,6 +22,7 @@ export default function SettingsPage() {
   const [birthYear, setBirthYear] = useState<number | undefined>(undefined);
   const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [goalPreset, setGoalPreset] = useState('');
+  const [darkMode, setDarkMode] = useState(false);
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
   const [hasServerKey, setHasServerKey] = useState(false);
@@ -50,6 +51,7 @@ export default function SettingsPage() {
       setBirthYear(profile.birthYear);
       setGender(profile.gender);
       setGoalPreset(profile.goalPreset || '');
+      setDarkMode(profile.darkMode || false);
       setApiKey(profile.geminiApiKey || '');
     }
   }, [profile]);
@@ -64,6 +66,7 @@ export default function SettingsPage() {
       birthYear: birthYear || null,
       gender: gender || null,
       goalPreset: goalPreset || null,
+      darkMode,
       targetCalories,
       targetProtein,
       targetCarbs,
@@ -290,6 +293,23 @@ export default function SettingsPage() {
               </button>
             ))}
           </div>
+        </div>
+
+        {/* Dark Mode */}
+        <div className="flex items-center justify-between">
+          <span className="text-sm font-medium text-gray-700">{t('settings.darkMode')}</span>
+          <button
+            onClick={() => setDarkMode(!darkMode)}
+            className={`relative w-12 h-7 rounded-full transition-colors ${
+              darkMode ? 'bg-blue-600' : 'bg-gray-300'
+            }`}
+          >
+            <span
+              className={`absolute top-0.5 left-0.5 w-6 h-6 bg-white rounded-full shadow transition-transform ${
+                darkMode ? 'translate-x-5' : ''
+              }`}
+            />
+          </button>
         </div>
       </div>
 

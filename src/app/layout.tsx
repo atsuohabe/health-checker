@@ -24,6 +24,7 @@ export default function RootLayout({
   return (
     <html lang="ja">
       <head>
+        <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no" />
         <meta name="theme-color" content="#2563eb" />
         <link rel="apple-touch-icon" href="/icon-192.png" />
       </head>

@@ -71,7 +71,8 @@
     "delete": "Delete",
     "deleteConfirm": "Delete this meal?",
     "cancel": "Cancel",
-    "noApiKey": "Gemini API key not set. Please configure it in Settings."
+    "noApiKey": "Gemini API key not set. Please configure it in Settings.",
+    "saveError": "Failed to save. Please try again."
   },
   "history": {
     "title": "History",

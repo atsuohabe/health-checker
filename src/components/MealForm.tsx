@@ -8,7 +8,7 @@ import { analyzeFood, resizeImage } from '@/lib/gemini';
 import { MEAL_TYPES } from '@/lib/constants';
 
 interface Props {
-  onSave: (meal: MealEntry) => void;
+  onSave: (meal: MealEntry) => void | Promise<void>;
   editMeal?: MealEntry | null;
   onCancel?: () => void;
 }
@@ -50,11 +50,12 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     setError('');
     try {
       const result = await analyzeFood({ imageBase64: photoBase64, description }, apiKey);
+      const round = (v: number, step: number, max: number) => Math.min(Math.round(v / step) * step, max);
       setNutrition({
-        calories: result.calories,
-        protein: result.protein,
-        carbs: result.carbs,
-        fat: result.fat,
+        calories: round(result.calories, 10, 2000),
+        protein: round(result.protein, 1, 200),
+        carbs: round(result.carbs, 1, 300),
+        fat: round(result.fat, 1, 200),
       });
     } catch {
       setError(t('log.analyzeError'));
@@ -63,7 +64,10 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     }
   };
 
-  const handleSave = () => {
+  const [saving, setSaving] = useState(false);
+
+  const handleSave = async () => {
+    if (saving) return;
     const meal: MealEntry = {
       id: editMeal?.id || crypto.randomUUID(),
       type: mealType,
@@ -72,15 +76,22 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       nutrition,
       timestamp: editMeal?.timestamp || new Date().toISOString(),
     };
-    onSave(meal);
-    setSaved(true);
-    if (!editMeal) {
-      setDescription('');
-      setPhotoBase64(undefined);
-      setNutrition({ calories: 0, protein: 0, carbs: 0, fat: 0 });
-      if (fileRef.current) fileRef.current.value = '';
+    setSaving(true);
+    try {
+      await onSave(meal);
+      setSaved(true);
+      if (!editMeal) {
+        setDescription('');
+        setPhotoBase64(undefined);
+        setNutrition({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+        if (fileRef.current) fileRef.current.value = '';
+      }
+      setTimeout(() => setSaved(false), 2000);
+    } catch {
+      setError(t('log.saveError'));
+    } finally {
+      setSaving(false);
     }
-    setTimeout(() => setSaved(false), 2000);
   };
 
   return (
@@ -124,7 +135,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
             {t('log.takePhoto')}
           </button>
         )}
-        <input ref={fileRef} type="file" accept="image/*" capture="environment" onChange={handlePhoto} className="hidden" />
+        <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
       </div>
 
       {/* Description */}
@@ -153,17 +164,25 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">{t('log.nutrition')}</label>
         <div className="grid grid-cols-2 gap-3">
-          {(['calories', 'protein', 'carbs', 'fat'] as const).map(key => (
+          {([
+            ['calories', 0, 2000, 10, 'kcal'],
+            ['protein', 0, 200, 1, 'g'],
+            ['carbs', 0, 300, 1, 'g'],
+            ['fat', 0, 200, 1, 'g'],
+          ] as const).map(([key, min, max, step, unit]) => (
             <div key={key}>
               <label className="block text-xs text-gray-500 mb-1">
-                {t(`dashboard.${key}`)} ({key === 'calories' ? 'kcal' : 'g'})
+                {t(`dashboard.${key}`)} ({unit})
               </label>
-              <input
-                type="number"
+              <select
                 value={nutrition[key]}
                 onChange={e => setNutrition({ ...nutrition, [key]: Number(e.target.value) })}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                {Array.from({ length: Math.floor((max - min) / step) + 1 }, (_, i) => min + i * step).map(v => (
+                  <option key={v} value={v}>{v} {unit}</option>
+                ))}
+              </select>
             </div>
           ))}
         </div>
@@ -178,10 +197,10 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         )}
         <button
           onClick={handleSave}
-          disabled={!description.trim()}
+          disabled={!description.trim() || saving}
           className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
-          {saved ? t('log.saved') : t('log.save')}
+          {saving ? t('common.loading') : saved ? t('log.saved') : t('log.save')}
         </button>
       </div>
     </div>

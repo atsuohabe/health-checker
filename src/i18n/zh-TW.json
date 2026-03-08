@@ -71,7 +71,8 @@
     "delete": "刪除",
     "deleteConfirm": "確定要刪除這筆餐食嗎？",
     "cancel": "取消",
-    "noApiKey": "尚未設定 Gemini API 金鑰，請在設定頁面中輸入。"
+    "noApiKey": "尚未設定 Gemini API 金鑰，請在設定頁面中輸入。",
+    "saveError": "儲存失敗，請再試一次。"
   },
   "history": {
     "title": "歷史",

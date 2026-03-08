@@ -71,7 +71,8 @@
     "delete": "削除",
     "deleteConfirm": "この食事を削除しますか？",
     "cancel": "キャンセル",
-    "noApiKey": "Gemini APIキーが設定されていません。設定ページで入力してください。"
+    "noApiKey": "Gemini APIキーが設定されていません。設定ページで入力してください。",
+    "saveError": "保存に失敗しました。もう一度お試しください。"
   },
   "history": {
     "title": "履歴",

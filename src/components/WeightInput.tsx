@@ -10,12 +10,15 @@ interface Props {
 
 export default function WeightInput({ currentWeight, onSave }: Props) {
   const { t } = useTranslation();
-  const [weight, setWeight] = useState(currentWeight?.toString() || '');
+  const defaultInt = currentWeight ? Math.floor(currentWeight) : 60;
+  const defaultDec = currentWeight ? Math.round((currentWeight - Math.floor(currentWeight)) * 10) : 0;
+  const [weightInt, setWeightInt] = useState(defaultInt);
+  const [weightDec, setWeightDec] = useState(defaultDec);
   const [saved, setSaved] = useState(false);
 
   const handleSave = () => {
-    const w = parseFloat(weight);
-    if (isNaN(w) || w <= 0) return;
+    const w = weightInt + weightDec / 10;
+    if (w <= 0) return;
     onSave(w);
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
@@ -24,16 +27,27 @@ export default function WeightInput({ currentWeight, onSave }: Props) {
   return (
     <div className="bg-white rounded-2xl shadow-sm p-4">
       <h3 className="font-semibold text-gray-800 mb-3">{t('log.weightEntry')}</h3>
-      <div className="flex gap-2">
-        <input
-          type="number"
-          step="0.1"
-          value={weight}
-          onChange={e => setWeight(e.target.value)}
-          placeholder={t('log.weightPlaceholder')}
-          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-        />
-        <span className="flex items-center text-sm text-gray-500">kg</span>
+      <div className="flex gap-2 items-center">
+        <select
+          value={weightInt}
+          onChange={e => setWeightInt(Number(e.target.value))}
+          className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+        >
+          {Array.from({ length: 161 }, (_, i) => 30 + i).map(v => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+        <span className="text-gray-700 font-medium">.</span>
+        <select
+          value={weightDec}
+          onChange={e => setWeightDec(Number(e.target.value))}
+          className="w-20 px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+        >
+          {Array.from({ length: 10 }, (_, i) => i).map(v => (
+            <option key={v} value={v}>{v}</option>
+          ))}
+        </select>
+        <span className="text-sm text-gray-500">kg</span>
         <button
           onClick={handleSave}
           className="px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"

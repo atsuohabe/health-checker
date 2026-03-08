@@ -123,21 +123,22 @@ export default function SettingsPage() {
         <h2 className="font-semibold text-gray-800">{t('settings.targets')}</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)', 100],
-            ['targetProtein', targetProtein, setTargetProtein, t('dashboard.protein') + ' (g)', 10],
-            ['targetCarbs', targetCarbs, setTargetCarbs, t('dashboard.carbs') + ' (g)', 10],
-            ['targetFat', targetFat, setTargetFat, t('dashboard.fat') + ' (g)', 10],
-          ].map(([key, value, setter, label, step]) => (
+            ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)', 800, 3800, 100, 'kcal'],
+            ['targetProtein', targetProtein, setTargetProtein, t('dashboard.protein') + ' (g)', 10, 210, 10, 'g'],
+            ['targetCarbs', targetCarbs, setTargetCarbs, t('dashboard.carbs') + ' (g)', 50, 450, 10, 'g'],
+            ['targetFat', targetFat, setTargetFat, t('dashboard.fat') + ' (g)', 10, 210, 10, 'g'],
+          ].map(([key, value, setter, label, min, max, step, unit]) => (
             <div key={key as string}>
               <label className="block text-xs font-medium text-gray-700 mb-1">{label as string}</label>
-              <input
-                type="number"
+              <select
                 value={value as number}
-                step={step as number}
-                min={0}
                 onChange={e => (setter as (v: number) => void)(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-              />
+                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+              >
+                {Array.from({ length: Math.floor(((max as number) - (min as number)) / (step as number)) + 1 }, (_, i) => (min as number) + i * (step as number)).map(v => (
+                  <option key={v} value={v}>{v} {unit as string}</option>
+                ))}
+              </select>
             </div>
           ))}
         </div>

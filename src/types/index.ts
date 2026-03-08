@@ -29,7 +29,7 @@ export interface UserProfile {
   nickname: string;
   language: Language;
   height?: number;
-  age?: number;
+  birthYear?: number;
   gender?: Gender;
   targetCalories: number;
   targetProtein: number;

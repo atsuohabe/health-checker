@@ -96,7 +96,7 @@
     "male": "男性",
     "female": "女性",
     "otherGender": "其他",
-    "age": "年齡",
+    "birthYear": "出生年",
     "height": "身高",
     "unset": "未設定",
     "bodyStatsHelp": "輸入後可用於更精準的目標優化",

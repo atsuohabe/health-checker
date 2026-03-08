@@ -96,7 +96,7 @@
     "male": "Masculino",
     "female": "Femenino",
     "otherGender": "Otro",
-    "age": "Edad",
+    "birthYear": "Año de nac.",
     "height": "Estatura",
     "unset": "Sin definir",
     "bodyStatsHelp": "Se usa para optimizar los objetivos con mayor precisión",

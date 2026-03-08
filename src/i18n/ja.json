@@ -96,7 +96,7 @@
     "male": "男性",
     "female": "女性",
     "otherGender": "その他",
-    "age": "年齢",
+    "birthYear": "生まれ年",
     "height": "身長",
     "unset": "未設定",
     "bodyStatsHelp": "入力すると目標値の最適化に活用されます",

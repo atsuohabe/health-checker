@@ -19,7 +19,7 @@ export default function SettingsPage() {
   const [targetCarbs, setTargetCarbs] = useState(250);
   const [targetFat, setTargetFat] = useState(55);
   const [height, setHeight] = useState<number | undefined>(undefined);
-  const [age, setAge] = useState<number | undefined>(undefined);
+  const [birthYear, setBirthYear] = useState<number | undefined>(undefined);
   const [gender, setGender] = useState<Gender | undefined>(undefined);
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
@@ -46,7 +46,7 @@ export default function SettingsPage() {
       setTargetCarbs(profile.targetCarbs);
       setTargetFat(profile.targetFat);
       setHeight(profile.height);
-      setAge(profile.age);
+      setBirthYear(profile.birthYear);
       setGender(profile.gender);
       setApiKey(profile.geminiApiKey || '');
     }
@@ -59,7 +59,7 @@ export default function SettingsPage() {
       nickname,
       language: lang,
       height: height || null,
-      age: age || null,
+      birthYear: birthYear || null,
       gender: gender || null,
       targetCalories,
       targetProtein,
@@ -78,7 +78,8 @@ export default function SettingsPage() {
 
   // Estimate BMR using Mifflin-St Jeor if body stats available
   const estimateBmr = (w?: number) => {
-    if (!height || !age) return null;
+    if (!height || !birthYear) return null;
+    const age = new Date().getFullYear() - birthYear;
     const weightKg = w || 60;
     if (gender === 'male') return 10 * weightKg + 6.25 * height - 5 * age + 5;
     if (gender === 'female') return 10 * weightKg + 6.25 * height - 5 * age - 161;
@@ -242,14 +243,14 @@ export default function SettingsPage() {
             </select>
           </div>
           <div>
-            <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.age')}</label>
+            <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.birthYear')}</label>
             <select
-              value={age || ''}
-              onChange={e => setAge(e.target.value ? Number(e.target.value) : undefined)}
+              value={birthYear || ''}
+              onChange={e => setBirthYear(e.target.value ? Number(e.target.value) : undefined)}
               className="w-full px-2 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
             >
               <option value="">{t('settings.unset')}</option>
-              {Array.from({ length: 83 }, (_, i) => i + 8).map(v => (
+              {Array.from({ length: 87 }, (_, i) => new Date().getFullYear() - 4 - i).map(v => (
                 <option key={v} value={v}>{v}</option>
               ))}
             </select>

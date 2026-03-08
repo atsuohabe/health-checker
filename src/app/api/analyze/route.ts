@@ -2,15 +2,23 @@ import { NextRequest, NextResponse } from 'next/server';
 import { GoogleGenAI } from '@google/genai';
 
 const PROMPT = `あなたは栄養士のAIアシスタントです。
-以下の食事について、栄養素を推定してください。
+以下の食事について、各食品ごとの栄養素を推定してください。
 
 以下のJSON形式のみで回答してください（他のテキストは不要）:
 {
-  "calories": <数値(kcal)>,
-  "protein": <数値(g)>,
-  "carbs": <数値(g)>,
-  "fat": <数値(g)>,
-  "items": ["推定した食品名1", "推定した食品名2"]
+  "items": [
+    {
+      "name": "食品名",
+      "calories": <数値(kcal)>,
+      "protein": <数値(g)>,
+      "carbs": <数値(g)>,
+      "fat": <数値(g)>
+    }
+  ],
+  "calories": <合計カロリー(kcal)>,
+  "protein": <合計タンパク質(g)>,
+  "carbs": <合計炭水化物(g)>,
+  "fat": <合計脂質(g)>
 }`;
 
 export async function POST(request: NextRequest) {
@@ -45,19 +53,27 @@ export async function POST(request: NextRequest) {
     });
 
     const text = response.text || '';
-    const jsonMatch = text.match(/\{[\s\S]*?\}/);
+    const jsonMatch = text.match(/\{[\s\S]*\}/);
 
     if (!jsonMatch) {
       return NextResponse.json({ error: 'Failed to parse response' }, { status: 500 });
     }
 
     const parsed = JSON.parse(jsonMatch[0]);
+    const items = (parsed.items || []).map((item: Record<string, unknown>) => ({
+      name: String(item.name || ''),
+      calories: Number(item.calories) || 0,
+      protein: Number(item.protein) || 0,
+      carbs: Number(item.carbs) || 0,
+      fat: Number(item.fat) || 0,
+    }));
+
     return NextResponse.json({
       calories: Number(parsed.calories) || 0,
       protein: Number(parsed.protein) || 0,
       carbs: Number(parsed.carbs) || 0,
       fat: Number(parsed.fat) || 0,
-      items: parsed.items || [],
+      items,
     });
   } catch (e) {
     console.error('Gemini API error:', e);

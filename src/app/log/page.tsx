@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
 import { getDailyRecord, addMeal, updateMeal, deleteMeal, setWeight } from '@/lib/firestore';
@@ -9,19 +9,27 @@ import WeightInput from '@/components/WeightInput';
 import MealForm from '@/components/MealForm';
 import MealCard from '@/components/MealCard';
 
+function toLocalDateStr(d: Date) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, '0');
+  const day = String(d.getDate()).padStart(2, '0');
+  return `${y}-${m}-${day}`;
+}
+
 function getToday() {
-  return new Date().toISOString().slice(0, 10);
+  return toLocalDateStr(new Date());
 }
 
 function shiftDate(dateStr: string, delta: number) {
-  const d = new Date(dateStr + 'T00:00:00');
-  d.setDate(d.getDate() + delta);
-  return d.toISOString().slice(0, 10);
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d + delta);
+  return toLocalDateStr(date);
 }
 
 function formatDateLabel(dateStr: string) {
-  const d = new Date(dateStr + 'T00:00:00');
-  return `${d.getMonth() + 1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
+  const [y, m, d] = dateStr.split('-').map(Number);
+  const date = new Date(y, m - 1, d);
+  return `${date.getMonth() + 1}/${date.getDate()}（${'日月火水木金土'[date.getDay()]}）`;
 }
 
 export default function LogPage() {
@@ -31,6 +39,14 @@ export default function LogPage() {
   const [record, setRecord] = useState<DailyRecord>({ date: selectedDate, meals: [] });
   const [editingMeal, setEditingMeal] = useState<MealEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const formRef = useRef<HTMLDivElement>(null);
+
+  const startEdit = (meal: MealEntry) => {
+    setEditingMeal(meal);
+    setTimeout(() => {
+      formRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }, 100);
+  };
 
   const isToday = selectedDate === getToday();
 
@@ -103,16 +119,18 @@ export default function LogPage() {
 
       <WeightInput currentWeight={record.weight} onSave={handleSaveWeight} />
 
-      {editingMeal ? (
-        <MealForm
-          key={`edit-${editingMeal.id}`}
-          editMeal={editingMeal}
-          onSave={handleSaveMeal}
-          onCancel={() => setEditingMeal(null)}
-        />
-      ) : (
-        <MealForm key="new" onSave={handleSaveMeal} />
-      )}
+      <div ref={formRef}>
+        {editingMeal ? (
+          <MealForm
+            key={`edit-${editingMeal.id}`}
+            editMeal={editingMeal}
+            onSave={handleSaveMeal}
+            onCancel={() => setEditingMeal(null)}
+          />
+        ) : (
+          <MealForm key="new" onSave={handleSaveMeal} />
+        )}
+      </div>
 
       {/* Today's Meals */}
       {record.meals.length > 0 && (
@@ -122,7 +140,7 @@ export default function LogPage() {
             <MealCard
               key={meal.id}
               meal={meal}
-              onEdit={() => setEditingMeal(meal)}
+              onEdit={() => startEdit(meal)}
               onDelete={() => handleDeleteMeal(meal.id)}
             />
           ))}

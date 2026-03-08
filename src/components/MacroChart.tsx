@@ -11,9 +11,11 @@ const XAxis = dynamic(() => import('recharts').then(m => m.XAxis), { ssr: false 
 const YAxis = dynamic(() => import('recharts').then(m => m.YAxis), { ssr: false });
 const Tooltip = dynamic(() => import('recharts').then(m => m.Tooltip), { ssr: false });
 const CartesianGrid = dynamic(() => import('recharts').then(m => m.CartesianGrid), { ssr: false });
+const ReferenceLine = dynamic(() => import('recharts').then(m => m.ReferenceLine), { ssr: false });
 
 interface Props {
   records: DailyRecord[];
+  targets?: { protein: number; carbs: number; fat: number };
 }
 
 const MACROS = [
@@ -22,7 +24,7 @@ const MACROS = [
   { key: 'fat', color: '#22C55E', labelKey: 'dashboard.fat' },
 ] as const;
 
-export default function MacroChart({ records }: Props) {
+export default function MacroChart({ records, targets }: Props) {
   const { t } = useTranslation();
 
   const data = records.map(r => {
@@ -46,22 +48,26 @@ export default function MacroChart({ records }: Props) {
 
   return (
     <div className="space-y-4">
-      {MACROS.map(({ key, color, labelKey }) => (
-        <div key={key}>
-          <h4 className="text-sm font-medium text-gray-600 mb-2">{t(labelKey)} (g)</h4>
-          <div className="h-40">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data}>
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
-                <YAxis tick={{ fontSize: 11 }} />
-                <Tooltip />
-                <Bar dataKey={key} fill={color} radius={[4, 4, 0, 0]} />
-              </BarChart>
-            </ResponsiveContainer>
+      {MACROS.map(({ key, color, labelKey }) => {
+        const target = targets?.[key];
+        return (
+          <div key={key}>
+            <h4 className="text-sm font-medium text-gray-600 mb-2">{t(labelKey)} (g)</h4>
+            <div className="h-40">
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={data}>
+                  <CartesianGrid strokeDasharray="3 3" />
+                  <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                  <YAxis tick={{ fontSize: 11 }} />
+                  <Tooltip />
+                  {target && <ReferenceLine y={target} stroke="#EF4444" strokeDasharray="6 3" strokeWidth={2} label={{ value: `${target}g`, position: 'right', fontSize: 10, fill: '#EF4444' }} />}
+                  <Bar dataKey={key} fill={color} radius={[4, 4, 0, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </div>
           </div>
-        </div>
-      ))}
+        );
+      })}
     </div>
   );
 }

@@ -15,6 +15,14 @@ function generateId(): string {
   }
 }
 
+interface FoodItem {
+  name: string;
+  calories: number;
+  protein: number;
+  carbs: number;
+  fat: number;
+}
+
 interface Props {
   onSave: (meal: MealEntry) => void | Promise<void>;
   editMeal?: MealEntry | null;
@@ -36,6 +44,8 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [hasServerKey, setHasServerKey] = useState(false);
+  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [showItems, setShowItems] = useState(false);
 
   useEffect(() => {
     fetch('/api/apikey-status')
@@ -56,6 +66,24 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     reader.readAsDataURL(file);
   };
 
+  const recalcFromItems = (items: FoodItem[]) => {
+    const totals = items.reduce(
+      (acc, item) => ({
+        calories: acc.calories + item.calories,
+        protein: acc.protein + item.protein,
+        carbs: acc.carbs + item.carbs,
+        fat: acc.fat + item.fat,
+      }),
+      { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    );
+    setNutrition({
+      calories: Math.round(totals.calories / 10) * 10,
+      protein: Math.round(totals.protein),
+      carbs: Math.round(totals.carbs),
+      fat: Math.round(totals.fat),
+    });
+  };
+
   const handleAnalyze = async () => {
     const apiKey = profile?.geminiApiKey || undefined;
     if (!apiKey && !hasServerKey) {
@@ -73,11 +101,35 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         carbs: round(result.carbs, 1, 300),
         fat: round(result.fat, 1, 200),
       });
+      if (result.items && result.items.length > 0) {
+        setFoodItems(result.items);
+        setShowItems(true);
+      }
     } catch {
       setError(t('log.analyzeError'));
     } finally {
       setAnalyzing(false);
     }
+  };
+
+  const updateItem = (index: number, field: keyof FoodItem, value: string | number) => {
+    const updated = [...foodItems];
+    if (field === 'name') {
+      updated[index] = { ...updated[index], name: value as string };
+    } else {
+      updated[index] = { ...updated[index], [field]: Number(value) || 0 };
+    }
+    setFoodItems(updated);
+  };
+
+  const removeItem = (index: number) => {
+    const updated = foodItems.filter((_, i) => i !== index);
+    setFoodItems(updated);
+    recalcFromItems(updated);
+  };
+
+  const handleRecalc = () => {
+    recalcFromItems(foodItems);
   };
 
   const [saving, setSaving] = useState(false);
@@ -100,6 +152,8 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         setDescription('');
         setPhotoBase64(undefined);
         setNutrition({ calories: 0, protein: 0, carbs: 0, fat: 0 });
+        setFoodItems([]);
+        setShowItems(false);
         if (fileRef.current) fileRef.current.value = '';
       }
       setTimeout(() => setSaved(false), 2000);
@@ -175,6 +229,64 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         {analyzing ? t('log.analyzing') : t('log.analyze')}
       </button>
       {error && <p className="text-red-600 text-sm font-medium bg-red-50 rounded-lg px-3 py-2">{error}</p>}
+
+      {/* Food Items Breakdown */}
+      {foodItems.length > 0 && (
+        <div className="border border-gray-200 rounded-lg p-3 space-y-3">
+          <div className="flex items-center justify-between">
+            <h4 className="text-sm font-semibold text-gray-700">{t('log.itemBreakdown')}</h4>
+            <button
+              onClick={() => setShowItems(!showItems)}
+              className="text-xs text-blue-600 hover:underline"
+            >
+              {showItems ? t('log.hideItems') : t('log.showItems')}
+            </button>
+          </div>
+          {showItems && (
+            <div className="space-y-2">
+              {foodItems.map((item, idx) => (
+                <div key={idx} className="bg-gray-50 rounded-lg p-2 space-y-1">
+                  <div className="flex items-center gap-2">
+                    <input
+                      type="text"
+                      value={item.name}
+                      onChange={e => updateItem(idx, 'name', e.target.value)}
+                      className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm bg-white"
+                    />
+                    <button
+                      onClick={() => removeItem(idx)}
+                      className="text-red-400 hover:text-red-600 p-1"
+                    >
+                      <svg className="w-4 h-4" fill="none" viewBox="0 0 24 24" strokeWidth={2} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M6 18 18 6M6 6l12 12" /></svg>
+                    </button>
+                  </div>
+                  <div className="grid grid-cols-4 gap-1">
+                    {(['calories', 'protein', 'carbs', 'fat'] as const).map(field => (
+                      <div key={field}>
+                        <label className="block text-[10px] text-gray-400">
+                          {field === 'calories' ? 'kcal' : field === 'protein' ? 'P' : field === 'carbs' ? 'C' : 'F'}
+                        </label>
+                        <input
+                          type="number"
+                          value={item[field]}
+                          onChange={e => updateItem(idx, field, e.target.value)}
+                          className="w-full px-1 py-0.5 border border-gray-300 rounded text-xs bg-white text-center"
+                        />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              ))}
+              <button
+                onClick={handleRecalc}
+                className="w-full py-1.5 bg-blue-50 text-blue-700 rounded-lg text-sm font-medium hover:bg-blue-100 transition-colors"
+              >
+                {t('log.recalculate')}
+              </button>
+            </div>
+          )}
+        </div>
+      )}
 
       {/* Nutrition Editor */}
       <div>

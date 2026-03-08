@@ -4,7 +4,7 @@ import { useState, useEffect, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
-import { saveUserProfile, getAllRecords } from '@/lib/firestore';
+import { saveUserProfile, getAllRecords, getRecordsInRange } from '@/lib/firestore';
 import { Language } from '@/types';
 
 export default function SettingsPage() {
@@ -21,6 +21,8 @@ export default function SettingsPage() {
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
   const [hasServerKey, setHasServerKey] = useState(false);
+  const [optimizing, setOptimizing] = useState(false);
+  const [optimizeMsg, setOptimizeMsg] = useState('');
   const initialized = useRef(false);
 
   useEffect(() => {
@@ -62,6 +64,54 @@ export default function SettingsPage() {
     await refreshProfile();
     setSaved(true);
     setTimeout(() => setSaved(false), 2000);
+  };
+
+  const handleOptimize = async () => {
+    setOptimizing(true);
+    setOptimizeMsg('');
+    try {
+      const now = new Date();
+      const toLocal = (d: Date) => `${d.getFullYear()}-${String(d.getMonth()+1).padStart(2,'0')}-${String(d.getDate()).padStart(2,'0')}`;
+      const start = new Date(now);
+      start.setDate(start.getDate() - 30);
+      const records = await getRecordsInRange(
+        user.uid,
+        toLocal(start),
+        toLocal(now)
+      );
+      const daysWithMeals = records.filter(r => r.meals.length > 0);
+      if (daysWithMeals.length < 3) {
+        setOptimizeMsg(t('settings.optimizeNoData'));
+        return;
+      }
+      const totals = daysWithMeals.map(r =>
+        r.meals.reduce(
+          (acc, m) => ({
+            calories: acc.calories + m.nutrition.calories,
+            protein: acc.protein + m.nutrition.protein,
+            carbs: acc.carbs + m.nutrition.carbs,
+            fat: acc.fat + m.nutrition.fat,
+          }),
+          { calories: 0, protein: 0, carbs: 0, fat: 0 }
+        )
+      );
+      const avg = {
+        calories: totals.reduce((s, t) => s + t.calories, 0) / totals.length,
+        protein: totals.reduce((s, t) => s + t.protein, 0) / totals.length,
+        carbs: totals.reduce((s, t) => s + t.carbs, 0) / totals.length,
+        fat: totals.reduce((s, t) => s + t.fat, 0) / totals.length,
+      };
+      // Round to nearest step
+      setTargetCalories(Math.round(avg.calories / 100) * 100);
+      setTargetProtein(Math.round(avg.protein / 10) * 10);
+      setTargetCarbs(Math.round(avg.carbs / 10) * 10);
+      setTargetFat(Math.round(avg.fat / 10) * 10);
+      setOptimizeMsg(t('settings.optimizeDone', { days: String(daysWithMeals.length) }));
+    } catch {
+      setOptimizeMsg(t('settings.optimizeError'));
+    } finally {
+      setOptimizing(false);
+    }
   };
 
   const handleExport = async () => {
@@ -142,6 +192,16 @@ export default function SettingsPage() {
             </div>
           ))}
         </div>
+        <button
+          onClick={handleOptimize}
+          disabled={optimizing}
+          className="w-full py-2 bg-purple-50 text-purple-700 rounded-lg text-sm font-medium hover:bg-purple-100 disabled:opacity-50 transition-colors"
+        >
+          {optimizing ? t('common.loading') : t('settings.optimizeTargets')}
+        </button>
+        {optimizeMsg && (
+          <p className="text-xs text-gray-600 bg-gray-50 rounded-lg px-3 py-2">{optimizeMsg}</p>
+        )}
       </div>
 
       {/* Gemini API Key */}

@@ -13,7 +13,7 @@ export default function Providers({ children }: { children: ReactNode }) {
     <AuthContext.Provider value={auth}>
       <I18nProvider initialLanguage={auth.profile?.language || 'ja'}>
         <AuthGuard>
-          <main className="pb-20 max-w-2xl mx-auto px-4">
+          <main className="pb-28 max-w-2xl mx-auto px-4">
             {children}
           </main>
           <Navigation />

@@ -18,20 +18,20 @@ export default function Navigation() {
   if (pathname === '/setup') return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-      <div className="flex justify-around max-w-2xl mx-auto pb-[env(safe-area-inset-bottom,8px)]">
+    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-bottom">
+      <div className="flex justify-around max-w-2xl mx-auto" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         {navItems.map(({ key, path, icon: Icon }) => {
           const active = pathname === path;
           return (
             <Link
               key={key}
               href={path}
-              className={`flex flex-col items-center pt-3 pb-2 px-3 min-w-[64px] transition-colors ${
+              className={`flex flex-col items-center pt-4 pb-3 px-4 min-w-[72px] transition-colors ${
                 active ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >
-              <Icon className="w-6 h-6" />
-              <span className="text-xs mt-1">{t(`nav.${key}`)}</span>
+              <Icon className="w-7 h-7" />
+              <span className="text-xs mt-1 font-medium">{t(`nav.${key}`)}</span>
             </Link>
           );
         })}

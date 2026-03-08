@@ -125,13 +125,13 @@ export default function DashboardPage() {
         {/* Calorie Trend */}
         <div className="bg-white rounded-2xl shadow-sm p-4">
           <h3 className="font-semibold text-gray-800 mb-3">{t('dashboard.calorieTrend')}</h3>
-          <DailyChart records={records} />
+          <DailyChart records={records} target={profile.targetCalories} />
         </div>
 
         {/* Macro Trends */}
         <div className="bg-white rounded-2xl shadow-sm p-4">
           <h3 className="font-semibold text-gray-800 mb-3">{t('dashboard.macroTrend')}</h3>
-          <MacroChart records={records} />
+          <MacroChart records={records} targets={{ protein: profile.targetProtein, carbs: profile.targetCarbs, fat: profile.targetFat }} />
         </div>
       </div>
     </div>

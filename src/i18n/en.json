@@ -73,7 +73,11 @@
     "deleteConfirm": "Delete this meal?",
     "cancel": "Cancel",
     "noApiKey": "Gemini API key not set. Please configure it in Settings.",
-    "saveError": "Failed to save. Please try again."
+    "saveError": "Failed to save. Please try again.",
+    "itemBreakdown": "Breakdown",
+    "showItems": "Show",
+    "hideItems": "Hide",
+    "recalculate": "Recalculate"
   },
   "history": {
     "title": "History",
@@ -101,7 +105,11 @@
     "updateAppHelp": "Update to the latest version",
     "exportData": "Export Data (JSON)",
     "logout": "Log Out",
-    "logoutConfirm": "Are you sure you want to log out?"
+    "logoutConfirm": "Are you sure you want to log out?",
+    "optimizeTargets": "Optimize targets from past data",
+    "optimizeNoData": "Not enough data (at least 3 days required)",
+    "optimizeDone": "Targets updated based on {days} days of data. Press Save to apply.",
+    "optimizeError": "Optimization failed"
   },
   "common": {
     "loading": "Loading...",

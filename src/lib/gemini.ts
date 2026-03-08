@@ -3,7 +3,7 @@ import { Nutrition } from '@/types';
 export async function analyzeFood(
   options: { imageBase64?: string; description?: string },
   apiKey?: string
-): Promise<Nutrition & { items?: string[] }> {
+): Promise<Nutrition & { items?: Array<{ name: string; calories: number; protein: number; carbs: number; fat: number }> }> {
   const res = await fetch('/api/analyze', {
     method: 'POST',
     headers: {

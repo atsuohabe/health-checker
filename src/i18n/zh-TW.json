@@ -73,7 +73,11 @@
     "deleteConfirm": "確定要刪除這筆餐食嗎？",
     "cancel": "取消",
     "noApiKey": "尚未設定 Gemini API 金鑰，請在設定頁面中輸入。",
-    "saveError": "儲存失敗，請再試一次。"
+    "saveError": "儲存失敗，請再試一次。",
+    "itemBreakdown": "明細",
+    "showItems": "顯示",
+    "hideItems": "隱藏",
+    "recalculate": "重新計算"
   },
   "history": {
     "title": "歷史",
@@ -101,7 +105,11 @@
     "updateAppHelp": "更新至最新版本",
     "exportData": "匯出資料 (JSON)",
     "logout": "登出",
-    "logoutConfirm": "確定要登出嗎？"
+    "logoutConfirm": "確定要登出嗎？",
+    "optimizeTargets": "根據過去資料優化目標值",
+    "optimizeNoData": "資料不足（至少需要3天）",
+    "optimizeDone": "已根據過去{days}天的資料更新目標值。請按儲存。",
+    "optimizeError": "優化失敗"
   },
   "common": {
     "loading": "載入中...",

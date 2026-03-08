@@ -10,12 +10,14 @@ const XAxis = dynamic(() => import('recharts').then(m => m.XAxis), { ssr: false 
 const YAxis = dynamic(() => import('recharts').then(m => m.YAxis), { ssr: false });
 const Tooltip = dynamic(() => import('recharts').then(m => m.Tooltip), { ssr: false });
 const CartesianGrid = dynamic(() => import('recharts').then(m => m.CartesianGrid), { ssr: false });
+const ReferenceLine = dynamic(() => import('recharts').then(m => m.ReferenceLine), { ssr: false });
 
 interface Props {
   records: DailyRecord[];
+  target?: number;
 }
 
-export default function DailyChart({ records }: Props) {
+export default function DailyChart({ records, target }: Props) {
   const data = records.map(r => ({
     date: r.date.slice(5),
     calories: r.meals.reduce((sum, m) => sum + m.nutrition.calories, 0),
@@ -31,6 +33,7 @@ export default function DailyChart({ records }: Props) {
           <XAxis dataKey="date" tick={{ fontSize: 11 }} />
           <YAxis tick={{ fontSize: 11 }} />
           <Tooltip />
+          {target && <ReferenceLine y={target} stroke="#EF4444" strokeDasharray="6 3" strokeWidth={2} label={{ value: `${target}`, position: 'right', fontSize: 10, fill: '#EF4444' }} />}
           <Bar dataKey="calories" fill="#3B82F6" radius={[4, 4, 0, 0]} />
         </BarChart>
       </ResponsiveContainer>

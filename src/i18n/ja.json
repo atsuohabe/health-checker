@@ -73,7 +73,11 @@
     "deleteConfirm": "この食事を削除しますか？",
     "cancel": "キャンセル",
     "noApiKey": "Gemini APIキーが設定されていません。設定ページで入力してください。",
-    "saveError": "保存に失敗しました。もう一度お試しください。"
+    "saveError": "保存に失敗しました。もう一度お試しください。",
+    "itemBreakdown": "内訳",
+    "showItems": "表示",
+    "hideItems": "非表示",
+    "recalculate": "再計算"
   },
   "history": {
     "title": "履歴",
@@ -101,7 +105,11 @@
     "updateAppHelp": "最新版に更新します",
     "exportData": "データエクスポート (JSON)",
     "logout": "ログアウト",
-    "logoutConfirm": "ログアウトしますか？"
+    "logoutConfirm": "ログアウトしますか？",
+    "optimizeTargets": "過去データから目標値を最適化",
+    "optimizeNoData": "データが不足しています（最低3日分必要）",
+    "optimizeDone": "過去{days}日分のデータを元に目標値を更新しました。保存ボタンを押してください。",
+    "optimizeError": "最適化に失敗しました"
   },
   "common": {
     "loading": "読み込み中...",

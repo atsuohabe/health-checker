@@ -96,6 +96,8 @@
     "save": "儲存",
     "saved": "已儲存",
     "dataManagement": "資料管理",
+    "updateApp": "更新應用程式",
+    "updateAppHelp": "更新至最新版本",
     "exportData": "匯出資料 (JSON)",
     "logout": "登出",
     "logoutConfirm": "確定要登出嗎？"

@@ -96,6 +96,8 @@
     "save": "保存",
     "saved": "保存しました",
     "dataManagement": "データ管理",
+    "updateApp": "アプリを更新する",
+    "updateAppHelp": "最新版に更新します",
     "exportData": "データエクスポート (JSON)",
     "logout": "ログアウト",
     "logoutConfirm": "ログアウトしますか？"

@@ -96,6 +96,8 @@
     "save": "Save",
     "saved": "Saved",
     "dataManagement": "Data Management",
+    "updateApp": "Update App",
+    "updateAppHelp": "Update to the latest version",
     "exportData": "Export Data (JSON)",
     "logout": "Log Out",
     "logoutConfirm": "Are you sure you want to log out?"

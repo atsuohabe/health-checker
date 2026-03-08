@@ -177,6 +177,23 @@ export default function SettingsPage() {
       <div className="bg-white rounded-2xl shadow-sm p-4 space-y-3">
         <h2 className="font-semibold text-gray-800">{t('settings.dataManagement')}</h2>
         <button
+          onClick={async () => {
+            if ('serviceWorker' in navigator) {
+              const registrations = await navigator.serviceWorker.getRegistrations();
+              await Promise.all(registrations.map(r => r.unregister()));
+            }
+            if ('caches' in window) {
+              const keys = await caches.keys();
+              await Promise.all(keys.map(k => caches.delete(k)));
+            }
+            window.location.reload();
+          }}
+          className="w-full py-2 bg-green-50 text-green-700 rounded-lg text-sm font-medium hover:bg-green-100 transition-colors"
+        >
+          {t('settings.updateApp')}
+        </button>
+        <p className="text-xs text-gray-400">{t('settings.updateAppHelp')}</p>
+        <button
           onClick={handleExport}
           className="w-full py-2 bg-gray-100 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-200 transition-colors"
         >

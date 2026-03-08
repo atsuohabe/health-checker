@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '@/i18n/context';
 import { useAuth } from '@/hooks/useAuth';
 import { MealType, Nutrition, MealEntry } from '@/types';
@@ -35,6 +35,14 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [hasServerKey, setHasServerKey] = useState(false);
+
+  useEffect(() => {
+    fetch('/api/apikey-status')
+      .then(res => res.json())
+      .then(data => setHasServerKey(data.hasServerKey))
+      .catch(() => {});
+  }, []);
 
   const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -50,7 +58,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
 
   const handleAnalyze = async () => {
     const apiKey = profile?.geminiApiKey || undefined;
-    if (!apiKey && !process.env.NEXT_PUBLIC_GEMINI_API_KEY) {
+    if (!apiKey && !hasServerKey) {
       setError(t('log.noApiKey'));
       return;
     }

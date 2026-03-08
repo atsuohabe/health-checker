@@ -5,6 +5,15 @@ import Providers from "./providers";
 export const metadata: Metadata = {
   title: "Calorie Tracker",
   description: "Track your daily calorie intake with AI-powered food analysis",
+  manifest: "/manifest.json",
+  appleWebApp: {
+    capable: true,
+    statusBarStyle: "default",
+    title: "Calorie Tracker",
+  },
+  other: {
+    "mobile-web-app-capable": "yes",
+  },
 };
 
 export default function RootLayout({
@@ -14,6 +23,10 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="ja">
+      <head>
+        <meta name="theme-color" content="#2563eb" />
+        <link rel="apple-touch-icon" href="/icon-192.png" />
+      </head>
       <body className="font-sans antialiased bg-gray-50">
         <Providers>
           {children}

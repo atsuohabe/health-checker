@@ -32,8 +32,21 @@ export async function getDailyRecord(uid: string, date: string): Promise<DailyRe
   return snap.data() as DailyRecord;
 }
 
+function removeUndefined(obj: unknown): unknown {
+  if (Array.isArray(obj)) return obj.map(removeUndefined);
+  if (obj !== null && typeof obj === 'object') {
+    return Object.fromEntries(
+      Object.entries(obj as Record<string, unknown>)
+        .filter(([, v]) => v !== undefined)
+        .map(([k, v]) => [k, removeUndefined(v)])
+    );
+  }
+  return obj;
+}
+
 export async function saveDailyRecord(uid: string, record: DailyRecord): Promise<void> {
-  await setDoc(doc(getFirebaseDb(), 'users', uid, 'records', record.date), record);
+  const cleaned = removeUndefined(record) as DailyRecord;
+  await setDoc(doc(getFirebaseDb(), 'users', uid, 'records', record.date), cleaned);
 }
 
 export async function addMeal(uid: string, date: string, meal: MealEntry): Promise<DailyRecord> {

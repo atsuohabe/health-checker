@@ -19,7 +19,11 @@ export async function getUserProfile(uid: string): Promise<UserProfile | null> {
 }
 
 export async function saveUserProfile(uid: string, profile: Partial<UserProfile>): Promise<void> {
-  await setDoc(doc(getFirebaseDb(), 'users', uid, 'data', 'profile'), profile, { merge: true });
+  // Firestore does not accept undefined values - filter them out
+  const cleaned = Object.fromEntries(
+    Object.entries(profile).filter(([, v]) => v !== undefined)
+  );
+  await setDoc(doc(getFirebaseDb(), 'users', uid, 'data', 'profile'), cleaned, { merge: true });
 }
 
 export async function getDailyRecord(uid: string, date: string): Promise<DailyRecord> {

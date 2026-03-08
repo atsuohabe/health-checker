@@ -107,22 +107,22 @@ export default function SetupPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetCalories')}</label>
-                <input type="number" value={targetCalories} onChange={e => setTargetCalories(Number(e.target.value))}
+                <input type="number" value={targetCalories} step={100} min={0} onChange={e => setTargetCalories(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetProtein')}</label>
-                <input type="number" value={targetProtein} onChange={e => setTargetProtein(Number(e.target.value))}
+                <input type="number" value={targetProtein} step={10} min={0} onChange={e => setTargetProtein(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetCarbs')}</label>
-                <input type="number" value={targetCarbs} onChange={e => setTargetCarbs(Number(e.target.value))}
+                <input type="number" value={targetCarbs} step={10} min={0} onChange={e => setTargetCarbs(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetFat')}</label>
-                <input type="number" value={targetFat} onChange={e => setTargetFat(Number(e.target.value))}
+                <input type="number" value={targetFat} step={10} min={0} onChange={e => setTargetFat(Number(e.target.value))}
                   className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
               </div>
             </div>

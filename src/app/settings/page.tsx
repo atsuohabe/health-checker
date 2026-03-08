@@ -123,16 +123,18 @@ export default function SettingsPage() {
         <h2 className="font-semibold text-gray-800">{t('settings.targets')}</h2>
         <div className="grid grid-cols-2 gap-3">
           {[
-            ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)'],
-            ['targetProtein', targetProtein, setTargetProtein, t('dashboard.protein') + ' (g)'],
-            ['targetCarbs', targetCarbs, setTargetCarbs, t('dashboard.carbs') + ' (g)'],
-            ['targetFat', targetFat, setTargetFat, t('dashboard.fat') + ' (g)'],
-          ].map(([key, value, setter, label]) => (
+            ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)', 100],
+            ['targetProtein', targetProtein, setTargetProtein, t('dashboard.protein') + ' (g)', 10],
+            ['targetCarbs', targetCarbs, setTargetCarbs, t('dashboard.carbs') + ' (g)', 10],
+            ['targetFat', targetFat, setTargetFat, t('dashboard.fat') + ' (g)', 10],
+          ].map(([key, value, setter, label, step]) => (
             <div key={key as string}>
               <label className="block text-xs font-medium text-gray-700 mb-1">{label as string}</label>
               <input
                 type="number"
                 value={value as number}
+                step={step as number}
+                min={0}
                 onChange={e => (setter as (v: number) => void)(Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
               />

@@ -59,6 +59,12 @@ export default function DashboardPage() {
     <div className="py-6 space-y-6">
       {/* Greeting */}
       <div>
+        <p className="text-sm text-gray-500 mb-1">
+          {(() => {
+            const d = new Date();
+            return `${d.getFullYear()}/${d.getMonth() + 1}/${d.getDate()}（${'日月火水木金土'[d.getDay()]}）`;
+          })()}
+        </p>
         <h1 className="text-2xl font-bold text-gray-800">
           {t('dashboard.greeting', { name: profile.nickname })}
         </h1>
@@ -122,10 +128,10 @@ export default function DashboardPage() {
           <DailyChart records={records} />
         </div>
 
-        {/* Macro Balance */}
+        {/* Macro Trends */}
         <div className="bg-white rounded-2xl shadow-sm p-4">
-          <h3 className="font-semibold text-gray-800 mb-3">{t('dashboard.macroBalance')}</h3>
-          <MacroChart record={todayRecord} />
+          <h3 className="font-semibold text-gray-800 mb-3">{t('dashboard.macroTrend')}</h3>
+          <MacroChart records={records} />
         </div>
       </div>
     </div>

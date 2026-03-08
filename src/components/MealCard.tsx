@@ -32,11 +32,11 @@ export default function MealCard({ meal, onEdit, onDelete }: Props) {
           </span>
         </div>
         <p className="text-sm text-gray-700 truncate mt-1">{meal.description}</p>
-        <div className="flex gap-3 text-xs text-gray-500 mt-1">
-          <span>{meal.nutrition.calories} kcal</span>
-          <span>P:{meal.nutrition.protein}g</span>
-          <span>C:{meal.nutrition.carbs}g</span>
-          <span>F:{meal.nutrition.fat}g</span>
+        <div className="flex flex-wrap gap-x-3 gap-y-0.5 text-xs mt-1">
+          <span className="text-gray-500">{meal.nutrition.calories} kcal</span>
+          <span className="text-red-500">P:{meal.nutrition.protein}g</span>
+          <span className="text-yellow-600">C:{meal.nutrition.carbs}g</span>
+          <span className="text-green-500">F:{meal.nutrition.fat}g</span>
         </div>
       </div>
       {(onEdit || onDelete) && (

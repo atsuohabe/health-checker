@@ -19,14 +19,14 @@ export default function Navigation() {
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50">
-      <div className="flex justify-around max-w-2xl mx-auto">
+      <div className="flex justify-around max-w-2xl mx-auto pb-[env(safe-area-inset-bottom,8px)]">
         {navItems.map(({ key, path, icon: Icon }) => {
           const active = pathname === path;
           return (
             <Link
               key={key}
               href={path}
-              className={`flex flex-col items-center py-2 px-3 min-w-[64px] transition-colors ${
+              className={`flex flex-col items-center pt-3 pb-2 px-3 min-w-[64px] transition-colors ${
                 active ? 'text-blue-600' : 'text-gray-400 hover:text-gray-600'
               }`}
             >

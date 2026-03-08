@@ -5,51 +5,63 @@ import { DailyRecord } from '@/types';
 import { useTranslation } from '@/i18n/context';
 
 const ResponsiveContainer = dynamic(() => import('recharts').then(m => m.ResponsiveContainer), { ssr: false });
-const PieChart = dynamic(() => import('recharts').then(m => m.PieChart), { ssr: false });
-const Pie = dynamic(() => import('recharts').then(m => m.Pie), { ssr: false });
-const Cell = dynamic(() => import('recharts').then(m => m.Cell), { ssr: false });
-const Legend = dynamic(() => import('recharts').then(m => m.Legend), { ssr: false });
+const BarChart = dynamic(() => import('recharts').then(m => m.BarChart), { ssr: false });
+const Bar = dynamic(() => import('recharts').then(m => m.Bar), { ssr: false });
+const XAxis = dynamic(() => import('recharts').then(m => m.XAxis), { ssr: false });
+const YAxis = dynamic(() => import('recharts').then(m => m.YAxis), { ssr: false });
 const Tooltip = dynamic(() => import('recharts').then(m => m.Tooltip), { ssr: false });
-
-const COLORS = ['#EF4444', '#EAB308', '#22C55E'];
+const CartesianGrid = dynamic(() => import('recharts').then(m => m.CartesianGrid), { ssr: false });
 
 interface Props {
-  record: DailyRecord;
+  records: DailyRecord[];
 }
 
-export default function MacroChart({ record }: Props) {
+const MACROS = [
+  { key: 'protein', color: '#EF4444', labelKey: 'dashboard.protein' },
+  { key: 'carbs', color: '#EAB308', labelKey: 'dashboard.carbs' },
+  { key: 'fat', color: '#22C55E', labelKey: 'dashboard.fat' },
+] as const;
+
+export default function MacroChart({ records }: Props) {
   const { t } = useTranslation();
 
-  const totals = record.meals.reduce(
-    (acc, m) => ({
-      protein: acc.protein + m.nutrition.protein,
-      carbs: acc.carbs + m.nutrition.carbs,
-      fat: acc.fat + m.nutrition.fat,
-    }),
-    { protein: 0, carbs: 0, fat: 0 }
-  );
+  const data = records.map(r => {
+    const totals = r.meals.reduce(
+      (acc, m) => ({
+        protein: acc.protein + m.nutrition.protein,
+        carbs: acc.carbs + m.nutrition.carbs,
+        fat: acc.fat + m.nutrition.fat,
+      }),
+      { protein: 0, carbs: 0, fat: 0 }
+    );
+    return {
+      date: r.date.slice(5),
+      protein: Math.round(totals.protein),
+      carbs: Math.round(totals.carbs),
+      fat: Math.round(totals.fat),
+    };
+  });
 
-  const data = [
-    { name: t('dashboard.protein'), value: Math.round(totals.protein) },
-    { name: t('dashboard.carbs'), value: Math.round(totals.carbs) },
-    { name: t('dashboard.fat'), value: Math.round(totals.fat) },
-  ];
-
-  if (data.every(d => d.value === 0)) return null;
+  if (data.length === 0) return null;
 
   return (
-    <div className="h-48">
-      <ResponsiveContainer width="100%" height="100%">
-        <PieChart>
-          <Pie data={data} cx="50%" cy="50%" outerRadius={60} dataKey="value" label={({ name, value }) => `${name}: ${value}g`}>
-            {data.map((_, i) => (
-              <Cell key={i} fill={COLORS[i]} />
-            ))}
-          </Pie>
-          <Tooltip />
-          <Legend />
-        </PieChart>
-      </ResponsiveContainer>
+    <div className="space-y-4">
+      {MACROS.map(({ key, color, labelKey }) => (
+        <div key={key}>
+          <h4 className="text-sm font-medium text-gray-600 mb-2">{t(labelKey)} (g)</h4>
+          <div className="h-40">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart data={data}>
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis dataKey="date" tick={{ fontSize: 11 }} />
+                <YAxis tick={{ fontSize: 11 }} />
+                <Tooltip />
+                <Bar dataKey={key} fill={color} radius={[4, 4, 0, 0]} />
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </div>
+      ))}
     </div>
   );
 }

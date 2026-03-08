@@ -34,9 +34,21 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const { profile } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
 
-  const [mealType, setMealType] = useState<MealType>(editMeal?.type || 'lunch');
+  const getDefaultMealType = (): MealType => {
+    const hour = new Date().getHours();
+    if (hour < 10) return 'breakfast';
+    if (hour < 15) return 'lunch';
+    if (hour < 21) return 'dinner';
+    return 'snack';
+  };
+
+  const [mealType, setMealType] = useState<MealType>(editMeal?.type || getDefaultMealType());
   const [description, setDescription] = useState(editMeal?.description || '');
-  const [photoBase64, setPhotoBase64] = useState<string | undefined>(editMeal?.photoBase64);
+  const [photos, setPhotos] = useState<string[]>(() => {
+    if (editMeal?.photos?.length) return editMeal.photos;
+    if (editMeal?.photoBase64) return [editMeal.photoBase64];
+    return [];
+  });
   const [nutrition, setNutrition] = useState<Nutrition>(
     editMeal?.nutrition || { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
@@ -55,15 +67,24 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   }, []);
 
   const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    const reader = new FileReader();
-    reader.onload = async (ev) => {
-      const dataUrl = ev.target?.result as string;
+    const files = e.target.files;
+    if (!files || files.length === 0) return;
+    const newPhotos: string[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const dataUrl = await new Promise<string>((resolve) => {
+        const reader = new FileReader();
+        reader.onload = (ev) => resolve(ev.target?.result as string);
+        reader.readAsDataURL(files[i]);
+      });
       const resized = await resizeImage(dataUrl);
-      setPhotoBase64(resized);
-    };
-    reader.readAsDataURL(file);
+      newPhotos.push(resized);
+    }
+    setPhotos(prev => [...prev, ...newPhotos]);
+    if (fileRef.current) fileRef.current.value = '';
+  };
+
+  const removePhoto = (index: number) => {
+    setPhotos(prev => prev.filter((_, i) => i !== index));
   };
 
   const recalcFromItems = (items: FoodItem[]) => {
@@ -93,7 +114,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     setAnalyzing(true);
     setError('');
     try {
-      const result = await analyzeFood({ imageBase64: photoBase64, description }, apiKey);
+      const result = await analyzeFood({ imageBase64: photos[0], description }, apiKey);
       const round = (v: number, step: number, max: number) => Math.min(Math.round(v / step) * step, max);
       setNutrition({
         calories: round(result.calories, 10, 2000),
@@ -140,7 +161,8 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       id: editMeal?.id || generateId(),
       type: mealType,
       description,
-      photoBase64,
+      photoBase64: photos[0],
+      photos: photos.length > 0 ? photos : undefined,
       nutrition,
       timestamp: editMeal?.timestamp || new Date().toISOString(),
     };
@@ -150,7 +172,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       setSaved(true);
       if (!editMeal) {
         setDescription('');
-        setPhotoBase64(undefined);
+        setPhotos([]);
         setNutrition({ calories: 0, protein: 0, carbs: 0, fat: 0 });
         setFoodItems([]);
         setShowItems(false);
@@ -187,15 +209,27 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       {/* Photo */}
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-2">{t('log.photo')}</label>
-        {photoBase64 ? (
-          <div className="relative">
-            <img src={photoBase64} alt="meal" className="w-full h-48 object-cover rounded-lg" />
-            <button
-              onClick={() => fileRef.current?.click()}
-              className="absolute bottom-2 right-2 bg-white/80 text-sm px-3 py-1 rounded-full"
-            >
-              {t('log.changePhoto')}
-            </button>
+        {photos.length > 0 ? (
+          <div className="space-y-2">
+            <div className="flex gap-2 overflow-x-auto pb-1">
+              {photos.map((photo, idx) => (
+                <div key={idx} className="relative flex-shrink-0">
+                  <img src={photo} alt={`meal-${idx + 1}`} className="h-32 w-32 object-cover rounded-lg" />
+                  <button
+                    onClick={() => removePhoto(idx)}
+                    className="absolute top-1 right-1 bg-black/50 text-white rounded-full w-5 h-5 flex items-center justify-center text-xs"
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+              <button
+                onClick={() => fileRef.current?.click()}
+                className="flex-shrink-0 h-32 w-32 border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center text-gray-400 hover:border-blue-400 hover:text-blue-400 transition-colors"
+              >
+                <svg className="w-8 h-8" fill="none" viewBox="0 0 24 24" strokeWidth={1.5} stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" d="M12 4.5v15m7.5-7.5h-15" /></svg>
+              </button>
+            </div>
           </div>
         ) : (
           <button
@@ -205,7 +239,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
             {t('log.takePhoto')}
           </button>
         )}
-        <input ref={fileRef} type="file" accept="image/*" onChange={handlePhoto} className="hidden" />
+        <input ref={fileRef} type="file" accept="image/*" multiple onChange={handlePhoto} className="hidden" />
       </div>
 
       {/* Description */}
@@ -223,7 +257,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       {/* AI Analyze */}
       <button
         onClick={handleAnalyze}
-        disabled={analyzing || (!photoBase64 && !description)}
+        disabled={analyzing || (photos.length === 0 && !description)}
         className="w-full py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {analyzing ? t('log.analyzing') : t('log.analyze')}
@@ -325,7 +359,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         )}
         <button
           onClick={handleSave}
-          disabled={(!description.trim() && !photoBase64) || saving}
+          disabled={(!description.trim() && photos.length === 0) || saving}
           className="flex-1 py-2 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
         >
           {saving ? t('common.loading') : saved ? t('log.saved') : t('log.save')}

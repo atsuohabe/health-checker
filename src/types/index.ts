@@ -13,6 +13,7 @@ export interface MealEntry {
   type: MealType;
   description: string;
   photoBase64?: string;
+  photos?: string[];
   nutrition: Nutrition;
   timestamp: string;
 }

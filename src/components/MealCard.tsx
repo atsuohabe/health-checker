@@ -15,12 +15,17 @@ export default function MealCard({ meal, onEdit, onDelete }: Props) {
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-3 flex gap-3">
-      {meal.photoBase64 && (
-        <img
-          src={meal.photoBase64}
-          alt={meal.description}
-          className="w-16 h-16 rounded-lg object-cover flex-shrink-0"
-        />
+      {(meal.photos?.length ? meal.photos : meal.photoBase64 ? [meal.photoBase64] : []).length > 0 && (
+        <div className="flex gap-1 flex-shrink-0">
+          {(meal.photos?.length ? meal.photos : [meal.photoBase64!]).map((photo, idx) => (
+            <img
+              key={idx}
+              src={photo}
+              alt={meal.description}
+              className="w-16 h-16 rounded-lg object-cover"
+            />
+          ))}
+        </div>
       )}
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-2">

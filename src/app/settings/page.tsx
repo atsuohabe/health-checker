@@ -38,15 +38,18 @@ export default function SettingsPage() {
   if (!user || !profile) return null;
 
   const handleSave = async () => {
-    await saveUserProfile(user.uid, {
+    const data: Record<string, unknown> = {
       nickname,
       language: lang,
       targetCalories,
       targetProtein,
       targetCarbs,
       targetFat,
-      geminiApiKey: apiKey || undefined,
-    });
+    };
+    if (apiKey) {
+      data.geminiApiKey = apiKey;
+    }
+    await saveUserProfile(user.uid, data);
     setLanguage(lang);
     await refreshProfile();
     setSaved(true);

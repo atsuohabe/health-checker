@@ -53,8 +53,8 @@ export default function SetupPage() {
           <label className="block text-sm font-medium text-gray-700 mb-2">
             {t('setup.selectLanguage')}
           </label>
-          <div className="flex gap-2">
-            {([['ja', '日本語'], ['en', 'English'], ['zh-TW', '繁體中文']] as [Language, string][]).map(([lang, label]) => (
+          <div className="grid grid-cols-2 gap-2">
+            {([['ja', '日本語'], ['en', 'English'], ['zh-TW', '繁體中文'], ['es', 'Español']] as [Language, string][]).map(([lang, label]) => (
               <button
                 key={lang}
                 onClick={() => handleLanguageChange(lang)}

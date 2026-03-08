@@ -5,11 +5,13 @@ import { Language } from '@/types';
 import ja from './ja.json';
 import en from './en.json';
 import zhTW from './zh-TW.json';
+import es from './es.json';
 
 const dictionaries: Record<Language, Record<string, unknown>> = {
   ja,
   en,
   'zh-TW': zhTW,
+  es,
 };
 
 function getNestedValue(obj: Record<string, unknown>, path: string): string {

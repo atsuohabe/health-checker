@@ -152,8 +152,8 @@ export default function SettingsPage() {
 
         <div>
           <label className="block text-sm font-medium text-gray-700 mb-2">{t('settings.language')}</label>
-          <div className="flex gap-2">
-            {([['ja', '日本語'], ['en', 'English'], ['zh-TW', '繁體中文']] as [Language, string][]).map(([l, label]) => (
+          <div className="grid grid-cols-2 gap-2">
+            {([['ja', '日本語'], ['en', 'English'], ['zh-TW', '繁體中文'], ['es', 'Español']] as [Language, string][]).map(([l, label]) => (
               <button
                 key={l}
                 onClick={() => setLang(l)}
@@ -171,6 +171,44 @@ export default function SettingsPage() {
       {/* Targets */}
       <div className="bg-white rounded-2xl shadow-sm p-4 space-y-4">
         <h2 className="font-semibold text-gray-800">{t('settings.targets')}</h2>
+
+        {/* Goal Preset */}
+        <div>
+          <label className="block text-xs font-medium text-gray-700 mb-1">{t('settings.goalPreset')}</label>
+          <select
+            defaultValue=""
+            onChange={e => {
+              const presets: Record<string, { cal: number; p: number; c: number; f: number }> = {
+                diet:        { cal: 1400, p: 60,  c: 150, f: 40 },
+                gentle_diet: { cal: 1700, p: 70,  c: 200, f: 45 },
+                maintain:    { cal: 2000, p: 60,  c: 250, f: 55 },
+                muscle:      { cal: 2500, p: 130, c: 300, f: 60 },
+                lean_bulk:   { cal: 2200, p: 120, c: 250, f: 50 },
+                cut_fat:     { cal: 1600, p: 110, c: 130, f: 45 },
+                active:      { cal: 2800, p: 100, c: 350, f: 70 },
+              };
+              const p = presets[e.target.value];
+              if (p) {
+                setTargetCalories(p.cal);
+                setTargetProtein(p.p);
+                setTargetCarbs(p.c);
+                setTargetFat(p.f);
+              }
+            }}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
+          >
+            <option value="" disabled>{t('settings.goalPlaceholder')}</option>
+            <option value="diet">{t('settings.goalDiet')}</option>
+            <option value="gentle_diet">{t('settings.goalGentleDiet')}</option>
+            <option value="maintain">{t('settings.goalMaintain')}</option>
+            <option value="muscle">{t('settings.goalMuscle')}</option>
+            <option value="lean_bulk">{t('settings.goalLeanBulk')}</option>
+            <option value="cut_fat">{t('settings.goalCutFat')}</option>
+            <option value="active">{t('settings.goalActive')}</option>
+          </select>
+          <p className="text-xs text-gray-400 mt-1">{t('settings.goalHelp')}</p>
+        </div>
+
         <div className="grid grid-cols-2 gap-3">
           {[
             ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)', 800, 3800, 100, 'kcal'],

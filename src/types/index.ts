@@ -1,5 +1,5 @@
 export type MealType = 'breakfast' | 'lunch' | 'dinner' | 'snack';
-export type Language = 'ja' | 'en' | 'zh-TW';
+export type Language = 'ja' | 'en' | 'zh-TW' | 'es';
 
 export interface Nutrition {
   calories: number;

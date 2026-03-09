@@ -1,17 +1,14 @@
-const CACHE_VERSION = 'v1';
+const CACHE_VERSION = 'v2';
 const CACHE_NAME = `caltrack-${CACHE_VERSION}`;
 
+// Only precache truly static files, NOT Next.js pages
 const PRECACHE_URLS = [
-  '/',
-  '/log',
-  '/history',
-  '/settings',
   '/manifest.json',
   '/icon-192.png',
   '/icon-512.png',
 ];
 
-// Install: precache app shell
+// Install: precache static assets only
 self.addEventListener('install', (event) => {
   event.waitUntil(
     caches.open(CACHE_NAME).then((cache) => cache.addAll(PRECACHE_URLS))
@@ -29,50 +26,28 @@ self.addEventListener('activate', (event) => {
   self.clients.claim();
 });
 
-// Fetch: network-first for navigations and API, cache-first for static assets
+// Fetch: network-first for everything, cache as fallback
 self.addEventListener('fetch', (event) => {
   const { request } = event;
 
   // Skip non-GET requests
   if (request.method !== 'GET') return;
 
-  // Skip Firebase/Google API calls (Firestore handles its own caching)
+  // Skip external API calls (Firestore handles its own caching)
   const url = new URL(request.url);
-  if (
-    url.hostname.includes('googleapis.com') ||
-    url.hostname.includes('firebaseio.com') ||
-    url.hostname.includes('firestore.googleapis.com') ||
-    url.pathname.startsWith('/api/')
-  ) {
-    return;
-  }
+  if (url.origin !== self.location.origin) return;
+  if (url.pathname.startsWith('/api/')) return;
 
-  // Navigation requests: network-first
-  if (request.mode === 'navigate') {
-    event.respondWith(
-      fetch(request)
-        .then((response) => {
-          const clone = response.clone();
-          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
-          return response;
-        })
-        .catch(() => caches.match(request).then((r) => r || caches.match('/')))
-    );
-    return;
-  }
-
-  // Static assets: cache-first
+  // Network-first for all same-origin requests
   event.respondWith(
-    caches.match(request).then((cached) => {
-      if (cached) return cached;
-      return fetch(request).then((response) => {
-        // Cache successful responses for static assets
-        if (response.ok && (url.pathname.match(/\.(js|css|png|jpg|svg|ico|woff2?)$/) || url.pathname.startsWith('/_next/'))) {
+    fetch(request)
+      .then((response) => {
+        if (response.ok) {
           const clone = response.clone();
           caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
         }
         return response;
-      });
-    })
+      })
+      .catch(() => caches.match(request))
   );
 });

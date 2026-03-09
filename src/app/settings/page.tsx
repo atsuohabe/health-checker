@@ -443,7 +443,7 @@ export default function SettingsPage() {
             setTimeout(() => setShareCopied(false), 2000);
           }
         }}
-        className="w-full py-3 bg-blue-50 text-blue-700 font-medium rounded-xl hover:bg-blue-100 transition-colors"
+        className="w-full py-3 bg-blue-50 text-blue-700 dark:bg-blue-900 dark:text-blue-200 font-medium rounded-xl hover:bg-blue-100 dark:hover:bg-blue-800 transition-colors"
       >
         {shareCopied ? t('settings.shareCopied') : t('settings.shareApp')}
       </button>

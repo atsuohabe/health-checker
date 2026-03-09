@@ -5,6 +5,7 @@ import { useTranslation } from '@/i18n/context';
 import { useAuth } from '@/hooks/useAuth';
 import { MealType, Nutrition, MealEntry } from '@/types';
 import { analyzeFood, resizeImage } from '@/lib/gemini';
+import { savePhotos } from '@/lib/photo-storage';
 import { MEAL_TYPES } from '@/lib/constants';
 
 function generateId(): string {
@@ -157,17 +158,20 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
 
   const handleSave = async () => {
     if (saving) return;
+    const mealId = editMeal?.id || generateId();
     const meal: MealEntry = {
-      id: editMeal?.id || generateId(),
+      id: mealId,
       type: mealType,
       description,
-      photoBase64: photos[0],
-      photos: photos.length > 0 ? photos : undefined,
       nutrition,
       timestamp: editMeal?.timestamp || new Date().toISOString(),
     };
     setSaving(true);
     try {
+      // Save photos to IndexedDB (not Firestore) to avoid 1MB document size limit
+      if (photos.length > 0) {
+        await savePhotos(mealId, photos);
+      }
       await onSave(meal);
       setSaved(true);
       if (!editMeal) {
@@ -179,8 +183,10 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         if (fileRef.current) fileRef.current.value = '';
       }
       setTimeout(() => setSaved(false), 2000);
-    } catch {
-      setError(t('log.saveError'));
+    } catch (err) {
+      console.error('Meal save failed:', err);
+      const msg = err instanceof Error ? err.message : String(err);
+      setError(`${t('log.saveError')}: ${msg}`);
     } finally {
       setSaving(false);
     }

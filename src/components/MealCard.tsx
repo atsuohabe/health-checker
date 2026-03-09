@@ -1,7 +1,9 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import { MealEntry } from '@/types';
 import { useTranslation } from '@/i18n/context';
+import { getPhotos } from '@/lib/photo-storage';
 
 interface Props {
   meal: MealEntry;
@@ -12,12 +14,25 @@ interface Props {
 export default function MealCard({ meal, onEdit, onDelete }: Props) {
   const { t } = useTranslation();
   const mealLabel = t(`log.${meal.type}`);
+  const [photos, setPhotos] = useState<string[]>([]);
+
+  useEffect(() => {
+    // Load photos from IndexedDB, fall back to legacy Firestore-stored photos
+    const legacyPhotos = meal.photos?.length ? meal.photos : meal.photoBase64 ? [meal.photoBase64] : [];
+    if (legacyPhotos.length > 0) {
+      setPhotos(legacyPhotos);
+    } else {
+      getPhotos(meal.id).then(p => {
+        if (p.length > 0) setPhotos(p);
+      }).catch(() => {});
+    }
+  }, [meal.id, meal.photos, meal.photoBase64]);
 
   return (
     <div className="bg-white rounded-xl shadow-sm p-3 flex gap-3">
-      {(meal.photos?.length ? meal.photos : meal.photoBase64 ? [meal.photoBase64] : []).length > 0 && (
+      {photos.length > 0 && (
         <div className="flex gap-1 flex-shrink-0">
-          {(meal.photos?.length ? meal.photos : [meal.photoBase64!]).map((photo, idx) => (
+          {photos.map((photo, idx) => (
             <img
               key={idx}
               src={photo}

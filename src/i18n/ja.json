@@ -112,6 +112,8 @@
     "updateApp": "アプリを更新する",
     "updateAppHelp": "最新版に更新します",
     "exportData": "データエクスポート (JSON)",
+    "shareApp": "アプリを共有する",
+    "shareCopied": "URLをコピーしました",
     "logout": "ログアウト",
     "logoutConfirm": "ログアウトしますか？",
     "goalPreset": "目標プリセット",

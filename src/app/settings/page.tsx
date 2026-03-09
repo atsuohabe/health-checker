@@ -26,6 +26,7 @@ export default function SettingsPage() {
   const [apiKey, setApiKey] = useState('');
   const [saved, setSaved] = useState(false);
   const [hasServerKey, setHasServerKey] = useState(false);
+  const [shareCopied, setShareCopied] = useState(false);
   const [optimizing, setOptimizing] = useState(false);
   const [optimizeMsg, setOptimizeMsg] = useState('');
   const [records, setRecords] = useState<import('@/types').DailyRecord[]>([]);
@@ -429,6 +430,23 @@ export default function SettingsPage() {
           {t('settings.exportData')}
         </button>
       </div>
+
+      {/* Share */}
+      <button
+        onClick={async () => {
+          const url = window.location.origin;
+          if (navigator.share) {
+            navigator.share({ title: 'Calorie Tracker', url }).catch(() => {});
+          } else {
+            await navigator.clipboard.writeText(url);
+            setShareCopied(true);
+            setTimeout(() => setShareCopied(false), 2000);
+          }
+        }}
+        className="w-full py-3 bg-blue-50 text-blue-700 font-medium rounded-xl hover:bg-blue-100 transition-colors"
+      >
+        {shareCopied ? t('settings.shareCopied') : t('settings.shareApp')}
+      </button>
 
       {/* Logout */}
       <button

@@ -112,6 +112,8 @@
     "updateApp": "Actualizar app",
     "updateAppHelp": "Actualizar a la última versión",
     "exportData": "Exportar datos (JSON)",
+    "shareApp": "Compartir app",
+    "shareCopied": "URL copiada",
     "logout": "Cerrar sesión",
     "logoutConfirm": "¿Seguro que quieres cerrar sesión?",
     "goalPreset": "Objetivo predefinido",

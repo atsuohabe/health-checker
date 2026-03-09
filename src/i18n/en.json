@@ -112,6 +112,8 @@
     "updateApp": "Update App",
     "updateAppHelp": "Update to the latest version",
     "exportData": "Export Data (JSON)",
+    "shareApp": "Share App",
+    "shareCopied": "URL copied",
     "logout": "Log Out",
     "logoutConfirm": "Are you sure you want to log out?",
     "goalPreset": "Goal Preset",

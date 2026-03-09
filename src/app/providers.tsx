@@ -15,6 +15,13 @@ export default function Providers({ children }: { children: ReactNode }) {
     document.documentElement.classList.toggle('dark', isDark);
   }, [auth.profile?.darkMode]);
 
+  // Register Service Worker
+  useEffect(() => {
+    if ('serviceWorker' in navigator) {
+      navigator.serviceWorker.register('/sw.js').catch(() => {});
+    }
+  }, []);
+
   return (
     <AuthContext.Provider value={auth}>
       <I18nProvider initialLanguage={auth.profile?.language || 'ja'}>

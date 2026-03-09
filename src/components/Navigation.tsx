@@ -1,5 +1,6 @@
 'use client';
 
+import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useTranslation } from '@/i18n/context';
@@ -14,8 +15,24 @@ const navItems = [
 export default function Navigation() {
   const pathname = usePathname();
   const { t } = useTranslation();
+  const [keyboardOpen, setKeyboardOpen] = useState(false);
+
+  useEffect(() => {
+    const vv = window.visualViewport;
+    if (!vv) return;
+
+    const handleResize = () => {
+      // If the visual viewport is significantly smaller than the window,
+      // the virtual keyboard is likely open
+      setKeyboardOpen(window.innerHeight - vv.height > 100);
+    };
+
+    vv.addEventListener('resize', handleResize);
+    return () => vv.removeEventListener('resize', handleResize);
+  }, []);
 
   if (pathname === '/setup') return null;
+  if (keyboardOpen) return null;
 
   return (
     <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-bottom">

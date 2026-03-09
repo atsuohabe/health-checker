@@ -4,6 +4,11 @@
   --font-sans: "Hiragino Kaku Gothic ProN", "Noto Sans JP", "Meiryo", system-ui, sans-serif;
 }
 
+/* Prevent horizontal scroll and width shift on mobile */
+html, body {
+  overflow-x: hidden;
+}
+
 /* Dark mode global overrides */
 .dark {
   color-scheme: dark;

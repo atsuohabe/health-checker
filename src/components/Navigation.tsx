@@ -32,10 +32,13 @@ export default function Navigation() {
   }, []);
 
   if (pathname === '/setup') return null;
-  if (keyboardOpen) return null;
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-bottom">
+    <nav
+      className={`fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 safe-bottom transition-opacity duration-200 ${
+        keyboardOpen ? 'opacity-0 pointer-events-none' : 'opacity-100'
+      }`}
+    >
       <div className="flex justify-around max-w-2xl mx-auto" style={{ paddingBottom: 'max(env(safe-area-inset-bottom, 0px), 12px)' }}>
         {navItems.map(({ key, path, icon: Icon }) => {
           const active = pathname === path;

@@ -139,6 +139,8 @@ export default function DashboardPage() {
           <MacroChart records={records} targets={{ protein: profile.targetProtein, carbs: profile.targetCarbs, fat: profile.targetFat }} />
         </div>
       </div>
+
+      <p className="text-center text-xs text-gray-400 mt-6 mb-4">v{process.env.APP_VERSION}</p>
     </div>
   );
 }

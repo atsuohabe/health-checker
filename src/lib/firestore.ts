@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, orderBy } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, where } from 'firebase/firestore';
 import { getFirebaseDb } from './firebase';
 import { DailyRecord, MealEntry, UserProfile } from '@/types';
 import { DEFAULT_TARGET_CALORIES, DEFAULT_TARGET_CARBS, DEFAULT_TARGET_FAT, DEFAULT_TARGET_PROTEIN } from './constants';
@@ -80,14 +80,16 @@ export async function setWeight(uid: string, date: string, weight: number): Prom
 
 export async function getRecordsInRange(uid: string, startDate: string, endDate: string): Promise<DailyRecord[]> {
   const colRef = collection(getFirebaseDb(), 'users', uid, 'records');
-  const q = query(colRef, orderBy('date', 'asc'));
+  const q = query(
+    colRef,
+    where('date', '>=', startDate),
+    where('date', '<=', endDate),
+    orderBy('date', 'asc'),
+  );
   const snap = await getDocs(q);
   const records: DailyRecord[] = [];
   snap.forEach(doc => {
-    const data = doc.data() as DailyRecord;
-    if (data.date >= startDate && data.date <= endDate) {
-      records.push(data);
-    }
+    records.push(doc.data() as DailyRecord);
   });
   return records;
 }

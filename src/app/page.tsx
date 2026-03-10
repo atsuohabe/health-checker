@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
-import { getDailyRecord, getRecordsInRange } from '@/lib/firestore';
+import { getRecordsInRange } from '@/lib/firestore';
 import { DailyRecord } from '@/types';
 import NutritionSummary from '@/components/NutritionSummary';
 import MealCard from '@/components/MealCard';
@@ -41,11 +41,9 @@ export default function DashboardPage() {
     if (!user) return;
     const load = async () => {
       const today = getToday();
-      const [rec, rangeRecs] = await Promise.all([
-        getDailyRecord(user.uid, today),
-        getRecordsInRange(user.uid, getDateNDaysAgo(chartDays), today),
-      ]);
-      setTodayRecord(rec);
+      const rangeRecs = await getRecordsInRange(user.uid, getDateNDaysAgo(chartDays), today);
+      const todayRec = rangeRecs.find(r => r.date === today) || { date: today, meals: [] };
+      setTodayRecord(todayRec);
       setRecords(rangeRecs);
       setLoading(false);
     };

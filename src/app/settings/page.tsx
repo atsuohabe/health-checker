@@ -455,6 +455,8 @@ export default function SettingsPage() {
       >
         {t('settings.logout')}
       </button>
+
+      <p className="text-center text-xs text-gray-400 mt-2 mb-4">v{process.env.APP_VERSION}</p>
     </div>
   );
 }

@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import { createContext, useContext, useState, useEffect, useCallback, ReactNode } from 'react';
 import { Language } from '@/types';
 import ja from './ja.json';
 import en from './en.json';
@@ -41,6 +41,10 @@ const I18nContext = createContext<I18nContextType>({
 
 export function I18nProvider({ children, initialLanguage = 'ja' }: { children: ReactNode; initialLanguage?: Language }) {
   const [language, setLanguage] = useState<Language>(initialLanguage);
+
+  useEffect(() => {
+    setLanguage(initialLanguage);
+  }, [initialLanguage]);
 
   const t = useCallback((key: string, params?: Record<string, string>) => {
     let value = getNestedValue(dictionaries[language], key);

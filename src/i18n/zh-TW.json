@@ -77,7 +77,8 @@
     "itemBreakdown": "明細",
     "showItems": "顯示",
     "hideItems": "隱藏",
-    "recalculate": "重新計算"
+    "recalculate": "重新計算",
+    "divideBy": "除以{n}"
   },
   "history": {
     "title": "歷史",

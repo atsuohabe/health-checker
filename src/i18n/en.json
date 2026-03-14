@@ -77,7 +77,8 @@
     "itemBreakdown": "Breakdown",
     "showItems": "Show",
     "hideItems": "Hide",
-    "recalculate": "Recalculate"
+    "recalculate": "Recalculate",
+    "divideBy": "Divide by {n}"
   },
   "history": {
     "title": "History",

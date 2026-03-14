@@ -77,7 +77,8 @@
     "itemBreakdown": "内訳",
     "showItems": "表示",
     "hideItems": "非表示",
-    "recalculate": "再計算"
+    "recalculate": "再計算",
+    "divideBy": "÷{n}で割る"
   },
   "history": {
     "title": "履歴",

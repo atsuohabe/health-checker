@@ -150,6 +150,20 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     recalcFromItems(updated);
   };
 
+  const divideItem = (index: number, divisor: number) => {
+    const updated = [...foodItems];
+    const item = updated[index];
+    updated[index] = {
+      ...item,
+      calories: Math.round(item.calories / divisor),
+      protein: Math.round(item.protein / divisor),
+      carbs: Math.round(item.carbs / divisor),
+      fat: Math.round(item.fat / divisor),
+    };
+    setFoodItems(updated);
+    recalcFromItems(updated);
+  };
+
   const handleRecalc = () => {
     recalcFromItems(foodItems);
   };
@@ -293,6 +307,18 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
                       onChange={e => updateItem(idx, 'name', e.target.value)}
                       className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm bg-white"
                     />
+                    <div className="flex items-center gap-1">
+                      {[2, 3].map(d => (
+                        <button
+                          key={d}
+                          onClick={() => divideItem(idx, d)}
+                          className="text-xs px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded border border-orange-200 hover:bg-orange-100 transition-colors font-medium"
+                          title={t('log.divideBy', { n: String(d) })}
+                        >
+                          ÷{d}
+                        </button>
+                      ))}
+                    </div>
                     <button
                       onClick={() => removeItem(idx)}
                       className="text-red-400 hover:text-red-600 p-1"

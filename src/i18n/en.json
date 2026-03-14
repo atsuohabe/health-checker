@@ -78,7 +78,10 @@
     "showItems": "Show",
     "hideItems": "Hide",
     "recalculate": "Recalculate",
-    "divideBy": "Divide by {n}"
+    "divideLabel": "Split:",
+    "oneServing": "1 serving",
+    "howManyPeople": "Shared by how many?",
+    "peopleSuffix": ""
   },
   "history": {
     "title": "History",

@@ -78,7 +78,10 @@
     "showItems": "表示",
     "hideItems": "非表示",
     "recalculate": "再計算",
-    "divideBy": "÷{n}で割る"
+    "divideLabel": "シェア:",
+    "oneServing": "1人前",
+    "howManyPeople": "何人でシェア？",
+    "peopleSuffix": "人"
   },
   "history": {
     "title": "履歴",

@@ -164,6 +164,16 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     recalcFromItems(updated);
   };
 
+  const [servingPrompt, setServingPrompt] = useState<number | null>(null);
+
+  const handleOneServing = (index: number) => {
+    if (servingPrompt === index) {
+      setServingPrompt(null);
+    } else {
+      setServingPrompt(index);
+    }
+  };
+
   const handleRecalc = () => {
     recalcFromItems(foodItems);
   };
@@ -299,7 +309,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
           {showItems && (
             <div className="space-y-2">
               {foodItems.map((item, idx) => (
-                <div key={idx} className="bg-gray-50 rounded-lg p-2 space-y-1">
+                <div key={idx} className="bg-gray-50 rounded-lg p-2 space-y-1.5">
                   <div className="flex items-center gap-2">
                     <input
                       type="text"
@@ -307,18 +317,6 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
                       onChange={e => updateItem(idx, 'name', e.target.value)}
                       className="flex-1 px-2 py-1 border border-gray-300 rounded text-sm bg-white"
                     />
-                    <div className="flex items-center gap-1">
-                      {[2, 3].map(d => (
-                        <button
-                          key={d}
-                          onClick={() => divideItem(idx, d)}
-                          className="text-xs px-1.5 py-0.5 bg-orange-50 text-orange-600 rounded border border-orange-200 hover:bg-orange-100 transition-colors font-medium"
-                          title={t('log.divideBy', { n: String(d) })}
-                        >
-                          ÷{d}
-                        </button>
-                      ))}
-                    </div>
                     <button
                       onClick={() => removeItem(idx)}
                       className="text-red-400 hover:text-red-600 p-1"
@@ -341,6 +339,45 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
                       </div>
                     ))}
                   </div>
+                  {/* Divide buttons */}
+                  <div className="flex items-center gap-1.5 pt-0.5">
+                    <span className="text-[10px] text-gray-400 mr-0.5">{t('log.divideLabel')}</span>
+                    {[2, 3, 4].map(d => (
+                      <button
+                        key={d}
+                        onClick={() => divideItem(idx, d)}
+                        className="text-xs px-2 py-1 bg-orange-50 text-orange-600 rounded-md border border-orange-200 hover:bg-orange-100 active:bg-orange-200 transition-colors font-semibold"
+                      >
+                        ÷{d}
+                      </button>
+                    ))}
+                    <button
+                      onClick={() => handleOneServing(idx)}
+                      className={`text-xs px-2 py-1 rounded-md border font-semibold transition-colors ${
+                        servingPrompt === idx
+                          ? 'bg-green-100 text-green-700 border-green-300'
+                          : 'bg-green-50 text-green-600 border-green-200 hover:bg-green-100 active:bg-green-200'
+                      }`}
+                    >
+                      {t('log.oneServing')}
+                    </button>
+                  </div>
+                  {servingPrompt === idx && (
+                    <div className="flex items-center gap-2 bg-green-50 rounded-md p-2">
+                      <span className="text-xs text-green-700 whitespace-nowrap">{t('log.howManyPeople')}</span>
+                      <div className="flex gap-1">
+                        {[2, 3, 4, 5, 6].map(n => (
+                          <button
+                            key={n}
+                            onClick={() => { divideItem(idx, n); setServingPrompt(null); }}
+                            className="text-xs px-2 py-1 bg-white text-green-700 rounded border border-green-300 hover:bg-green-100 active:bg-green-200 transition-colors font-semibold"
+                          >
+                            {n}{t('log.peopleSuffix')}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+                  )}
                 </div>
               ))}
               <button

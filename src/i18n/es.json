@@ -81,7 +81,8 @@
     "divideLabel": "Compartir:",
     "oneServing": "1 porción",
     "howManyPeople": "¿Entre cuántos?",
-    "peopleSuffix": ""
+    "peopleSuffix": "",
+    "undoDivide": "Deshacer"
   },
   "history": {
     "title": "Historial",

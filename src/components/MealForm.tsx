@@ -58,6 +58,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const [saved, setSaved] = useState(false);
   const [hasServerKey, setHasServerKey] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [originalItems, setOriginalItems] = useState<FoodItem[] | null>(null);
   const [showItems, setShowItems] = useState(false);
 
   useEffect(() => {
@@ -125,6 +126,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       });
       if (result.items && result.items.length > 0) {
         setFoodItems(result.items);
+        setOriginalItems(null);
         setShowItems(true);
       }
     } catch {
@@ -142,15 +144,22 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       updated[index] = { ...updated[index], [field]: Number(value) || 0 };
     }
     setFoodItems(updated);
+    if (field !== 'name') {
+      recalcFromItems(updated);
+    }
   };
 
   const removeItem = (index: number) => {
     const updated = foodItems.filter((_, i) => i !== index);
     setFoodItems(updated);
+    setOriginalItems(null);
     recalcFromItems(updated);
   };
 
   const divideItem = (index: number, divisor: number) => {
+    if (!originalItems) {
+      setOriginalItems(foodItems.map(item => ({ ...item })));
+    }
     const updated = [...foodItems];
     const item = updated[index];
     updated[index] = {
@@ -162,6 +171,14 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     };
     setFoodItems(updated);
     recalcFromItems(updated);
+  };
+
+  const undoDivide = () => {
+    if (originalItems) {
+      setFoodItems(originalItems);
+      recalcFromItems(originalItems);
+      setOriginalItems(null);
+    }
   };
 
   const [servingPrompt, setServingPrompt] = useState<number | null>(null);
@@ -340,7 +357,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
                     ))}
                   </div>
                   {/* Divide buttons */}
-                  <div className="flex items-center gap-1.5 pt-0.5">
+                  <div className="flex items-center gap-1.5 pt-0.5 flex-wrap">
                     <span className="text-[10px] text-gray-400 mr-0.5">{t('log.divideLabel')}</span>
                     {[2, 3, 4].map(d => (
                       <button
@@ -361,12 +378,20 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
                     >
                       {t('log.oneServing')}
                     </button>
+                    {originalItems && (
+                      <button
+                        onClick={undoDivide}
+                        className="text-xs px-2 py-1 bg-gray-50 text-gray-600 rounded-md border border-gray-300 hover:bg-gray-100 active:bg-gray-200 transition-colors font-semibold"
+                      >
+                        {t('log.undoDivide')}
+                      </button>
+                    )}
                   </div>
                   {servingPrompt === idx && (
-                    <div className="flex items-center gap-2 bg-green-50 rounded-md p-2">
+                    <div className="flex items-center gap-2 bg-green-50 rounded-md p-2 flex-wrap">
                       <span className="text-xs text-green-700 whitespace-nowrap">{t('log.howManyPeople')}</span>
-                      <div className="flex gap-1">
-                        {[2, 3, 4, 5, 6].map(n => (
+                      <div className="flex gap-1 flex-wrap">
+                        {[2, 3, 4, 5, 6, 7, 8, 9, 10].map(n => (
                           <button
                             key={n}
                             onClick={() => { divideItem(idx, n); setServingPrompt(null); }}

@@ -81,7 +81,8 @@
     "divideLabel": "分食:",
     "oneServing": "1人份",
     "howManyPeople": "幾人分食？",
-    "peopleSuffix": "人"
+    "peopleSuffix": "人",
+    "undoDivide": "復原"
   },
   "history": {
     "title": "歷史",

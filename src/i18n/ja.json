@@ -81,7 +81,8 @@
     "divideLabel": "シェア:",
     "oneServing": "1人前",
     "howManyPeople": "何人でシェア？",
-    "peopleSuffix": "人"
+    "peopleSuffix": "人",
+    "undoDivide": "元に戻す"
   },
   "history": {
     "title": "履歴",

@@ -81,7 +81,8 @@
     "divideLabel": "Split:",
     "oneServing": "1 serving",
     "howManyPeople": "Shared by how many?",
-    "peopleSuffix": ""
+    "peopleSuffix": "",
+    "undoDivide": "Undo"
   },
   "history": {
     "title": "History",

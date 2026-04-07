@@ -4,7 +4,7 @@ import { useState, useRef, useEffect } from 'react';
 import { useTranslation } from '@/i18n/context';
 import { useAuth } from '@/hooks/useAuth';
 import { MealType, Nutrition, MealEntry } from '@/types';
-import { analyzeFood, resizeImage } from '@/lib/gemini';
+import { analyzeFood, resizeImage, RateLimitError } from '@/lib/gemini';
 import { savePhotos } from '@/lib/photo-storage';
 import { MEAL_TYPES } from '@/lib/constants';
 
@@ -56,6 +56,8 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
+  const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
+  const handleAnalyzeRef = useRef<() => void>(() => {});
   const [hasServerKey, setHasServerKey] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [originalItems, setOriginalItems] = useState<FoodItem[] | null>(null);
@@ -67,6 +69,22 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       .then(data => setHasServerKey(data.hasServerKey))
       .catch(() => {});
   }, []);
+
+  // Countdown timer for rate limit: auto-retries when it reaches 0
+  useEffect(() => {
+    if (retryCountdown === null || retryCountdown <= 0) return;
+    const timer = setTimeout(() => {
+      setRetryCountdown(c => {
+        if (c === null || c <= 1) {
+          // Last tick: schedule the retry after state update
+          setTimeout(() => handleAnalyzeRef.current(), 0);
+          return null;
+        }
+        return c - 1;
+      });
+    }, 1000);
+    return () => clearTimeout(timer);
+  }, [retryCountdown]);
 
   const handlePhoto = async (e: React.ChangeEvent<HTMLInputElement>) => {
     const files = e.target.files;
@@ -130,12 +148,20 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         setShowItems(true);
       }
     } catch (err) {
-      const msg = err instanceof Error ? err.message : '';
-      setError(msg || t('log.analyzeError'));
+      if (err instanceof RateLimitError) {
+        setRetryCountdown(err.retryAfter);
+        setError('');
+      } else {
+        const msg = err instanceof Error ? err.message : '';
+        setError(msg || t('log.analyzeError'));
+      }
     } finally {
       setAnalyzing(false);
     }
   };
+
+  // Always point to latest handleAnalyze to avoid stale closure in countdown effect
+  handleAnalyzeRef.current = handleAnalyze;
 
   const updateItem = (index: number, field: keyof FoodItem, value: string | number) => {
     const updated = [...foodItems];
@@ -304,11 +330,15 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
 
       {/* AI Analyze */}
       <button
-        onClick={handleAnalyze}
-        disabled={analyzing || (photos.length === 0 && !description)}
+        onClick={retryCountdown === null ? handleAnalyze : undefined}
+        disabled={analyzing || retryCountdown !== null || (photos.length === 0 && !description)}
         className="w-full py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
-        {analyzing ? t('log.analyzing') : t('log.analyze')}
+        {analyzing
+          ? t('log.analyzing')
+          : retryCountdown !== null
+            ? `${retryCountdown}秒後に再試行...`
+            : t('log.analyze')}
       </button>
       {error && <p className="text-red-600 text-sm font-medium bg-red-50 rounded-lg px-3 py-2">{error}</p>}
 

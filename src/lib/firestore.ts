@@ -94,6 +94,24 @@ export async function getRecordsInRange(uid: string, startDate: string, endDate:
   return records;
 }
 
+export async function getLastRecordedWeight(uid: string, beforeDate: string): Promise<number | undefined> {
+  const startDate = (() => {
+    const [y, m, d] = beforeDate.split('-').map(Number);
+    const date = new Date(y, m - 1, d - 90);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  })();
+  const endDate = (() => {
+    const [y, m, d] = beforeDate.split('-').map(Number);
+    const date = new Date(y, m - 1, d - 1);
+    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
+  })();
+  const records = await getRecordsInRange(uid, startDate, endDate);
+  for (let i = records.length - 1; i >= 0; i--) {
+    if (records[i].weight != null) return records[i].weight;
+  }
+  return undefined;
+}
+
 export async function getAllRecords(uid: string): Promise<DailyRecord[]> {
   const colRef = collection(getFirebaseDb(), 'users', uid, 'records');
   const snap = await getDocs(colRef);

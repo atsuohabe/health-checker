@@ -3,7 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
-import { getDailyRecord, addMeal, updateMeal, deleteMeal, setWeight } from '@/lib/firestore';
+import { getDailyRecord, addMeal, updateMeal, deleteMeal, setWeight, getLastRecordedWeight } from '@/lib/firestore';
 import { DailyRecord, MealEntry } from '@/types';
 import WeightInput from '@/components/WeightInput';
 import MealForm from '@/components/MealForm';
@@ -39,6 +39,7 @@ export default function LogPage() {
   const [record, setRecord] = useState<DailyRecord>({ date: selectedDate, meals: [] });
   const [editingMeal, setEditingMeal] = useState<MealEntry | null>(null);
   const [loading, setLoading] = useState(true);
+  const [lastWeight, setLastWeight] = useState<number | undefined>(undefined);
   const formRef = useRef<HTMLDivElement>(null);
 
   const startEdit = (meal: MealEntry) => {
@@ -55,6 +56,12 @@ export default function LogPage() {
     setLoading(true);
     const rec = await getDailyRecord(user.uid, selectedDate);
     setRecord(rec);
+    if (rec.weight == null) {
+      const prev = await getLastRecordedWeight(user.uid, selectedDate);
+      setLastWeight(prev);
+    } else {
+      setLastWeight(undefined);
+    }
     setLoading(false);
   }, [user, selectedDate]);
 
@@ -117,7 +124,7 @@ export default function LogPage() {
         </button>
       </div>
 
-      <WeightInput currentWeight={record.weight} onSave={handleSaveWeight} />
+      <WeightInput currentWeight={record.weight} lastWeight={lastWeight} onSave={handleSaveWeight} />
 
       <div ref={formRef}>
         {editingMeal ? (

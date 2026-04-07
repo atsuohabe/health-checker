@@ -5,13 +5,15 @@ import { useTranslation } from '@/i18n/context';
 
 interface Props {
   currentWeight?: number;
+  lastWeight?: number;
   onSave: (weight: number) => void;
 }
 
-export default function WeightInput({ currentWeight, onSave }: Props) {
+export default function WeightInput({ currentWeight, lastWeight, onSave }: Props) {
   const { t } = useTranslation();
-  const defaultInt = currentWeight ? Math.floor(currentWeight) : 60;
-  const defaultDec = currentWeight ? Math.round((currentWeight - Math.floor(currentWeight)) * 10) : 0;
+  const baseWeight = currentWeight ?? lastWeight;
+  const defaultInt = baseWeight ? Math.floor(baseWeight) : 60;
+  const defaultDec = baseWeight ? Math.round((baseWeight - Math.floor(baseWeight)) * 10) : 0;
   const [weightInt, setWeightInt] = useState(defaultInt);
   const [weightDec, setWeightDec] = useState(defaultDec);
   const [saved, setSaved] = useState(false);

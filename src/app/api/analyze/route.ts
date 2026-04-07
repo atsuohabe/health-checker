@@ -50,6 +50,9 @@ export async function POST(request: NextRequest) {
     const response = await ai.models.generateContent({
       model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts }],
+      config: {
+        thinkingConfig: { thinkingBudget: 0 },
+      },
     });
 
     const text = response.text || '';

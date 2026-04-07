@@ -14,7 +14,12 @@ export async function analyzeFood(
   });
 
   if (!res.ok) {
-    throw new Error('Analysis failed');
+    let errMsg = 'Analysis failed';
+    try {
+      const body = await res.json();
+      if (body.error) errMsg = body.error;
+    } catch { /* keep default message */ }
+    throw new Error(errMsg);
   }
 
   return res.json();

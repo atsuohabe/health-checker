@@ -129,8 +129,9 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
         setOriginalItems(null);
         setShowItems(true);
       }
-    } catch {
-      setError(t('log.analyzeError'));
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : '';
+      setError(msg || t('log.analyzeError'));
     } finally {
       setAnalyzing(false);
     }

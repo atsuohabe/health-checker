@@ -4,7 +4,7 @@ import { GoogleGenAI } from '@google/genai';
 const PROMPT = `あなたは栄養士のAIアシスタントです。
 以下の食事について、各食品ごとの栄養素を推定してください。
 
-以下のJSON形式のみで回答してください（他のテキストは不要）:
+以下のJSON形式で回答してください:
 {
   "items": [
     {
@@ -29,6 +29,10 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'API key not configured' }, { status: 400 });
   }
 
+  if (!imageBase64 && !description) {
+    return NextResponse.json({ error: 'No input provided' }, { status: 400 });
+  }
+
   try {
     const ai = new GoogleGenAI({ apiKey });
 
@@ -48,22 +52,28 @@ export async function POST(request: NextRequest) {
     parts.push({ text: PROMPT });
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
+      model: 'gemini-2.0-flash',
       contents: [{ role: 'user', parts }],
       config: {
-        thinkingConfig: { thinkingBudget: 0 },
+        responseMimeType: 'application/json',
       },
     });
 
     const text = response.text || '';
-    const jsonMatch = text.match(/\{[\s\S]*\}/);
+    if (!text) {
+      console.error('Gemini API: empty response');
+      return NextResponse.json({ error: 'Empty response from model' }, { status: 500 });
+    }
 
-    if (!jsonMatch) {
+    let parsed: Record<string, unknown>;
+    try {
+      parsed = JSON.parse(text);
+    } catch (parseErr) {
+      console.error('Gemini API: JSON parse failed. Raw text:', text, 'Error:', parseErr);
       return NextResponse.json({ error: 'Failed to parse response' }, { status: 500 });
     }
 
-    const parsed = JSON.parse(jsonMatch[0]);
-    const items = (parsed.items || []).map((item: Record<string, unknown>) => ({
+    const items = (Array.isArray(parsed.items) ? parsed.items : []).map((item: Record<string, unknown>) => ({
       name: String(item.name || ''),
       calories: Number(item.calories) || 0,
       protein: Number(item.protein) || 0,
@@ -79,7 +89,8 @@ export async function POST(request: NextRequest) {
       items,
     });
   } catch (e) {
-    console.error('Gemini API error:', e);
-    return NextResponse.json({ error: 'Analysis failed' }, { status: 500 });
+    const msg = e instanceof Error ? e.message : String(e);
+    console.error('Gemini API error:', msg);
+    return NextResponse.json({ error: `Analysis failed: ${msg}` }, { status: 500 });
   }
 }

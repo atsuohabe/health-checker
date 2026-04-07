@@ -89,8 +89,20 @@ export async function POST(request: NextRequest) {
       items,
     });
   } catch (e) {
-    const msg = e instanceof Error ? e.message : String(e);
-    console.error('Gemini API error:', msg);
-    return NextResponse.json({ error: `Analysis failed: ${msg}` }, { status: 500 });
+    const raw = e instanceof Error ? e.message : String(e);
+    console.error('Gemini API error:', raw);
+
+    // Extract the human-readable message from Gemini API error JSON
+    // Format: "got status: NNN. {\"error\":{\"code\":NNN,\"message\":\"...\"}}"
+    let detail = raw;
+    try {
+      const jsonStart = raw.indexOf('{');
+      if (jsonStart >= 0) {
+        const parsed = JSON.parse(raw.slice(jsonStart));
+        if (parsed.error?.message) detail = parsed.error.message;
+      }
+    } catch { /* keep raw message */ }
+
+    return NextResponse.json({ error: detail }, { status: 500 });
   }
 }

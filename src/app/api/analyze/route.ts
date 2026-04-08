@@ -21,6 +21,25 @@ const PROMPT = `あなたは栄養士のAIアシスタントです。
   "fat": <合計脂質(g)>
 }`;
 
+// Fallback order: try each model until one succeeds
+const MODELS = [
+  'gemini-2.5-flash',
+  'gemini-2.0-flash',
+  'gemini-1.5-flash',
+];
+
+/** True if the error means the model is overloaded/unavailable (try next model) */
+function isModelUnavailable(msg: string): boolean {
+  const lower = msg.toLowerCase();
+  return (
+    lower.includes('high demand') ||
+    lower.includes('overloaded') ||
+    lower.includes('temporarily unavailable') ||
+    lower.includes('service unavailable') ||
+    lower.includes('503')
+  );
+}
+
 /** Parse "Please retry in Xs" from Gemini rate-limit error, returns seconds */
 function parseRetryAfterSec(msg: string): number | null {
   const m = msg.match(/retry in (\d+(?:\.\d+)?)s/i);
@@ -51,75 +70,98 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ error: 'No input provided' }, { status: 400 });
   }
 
-  try {
-    const ai = new GoogleGenAI({ apiKey });
+  const ai = new GoogleGenAI({ apiKey });
 
-    const parts: Array<{ inlineData: { mimeType: string; data: string } } | { text: string }> = [];
+  const parts: Array<{ inlineData: { mimeType: string; data: string } } | { text: string }> = [];
 
-    if (imageBase64) {
-      const match = imageBase64.match(/^data:(.*?);base64,(.*)$/);
-      if (match) {
-        parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
-      }
+  if (imageBase64) {
+    const match = imageBase64.match(/^data:(.*?);base64,(.*)$/);
+    if (match) {
+      parts.push({ inlineData: { mimeType: match[1], data: match[2] } });
     }
-
-    if (description) {
-      parts.push({ text: `食事の説明: ${description}` });
-    }
-
-    parts.push({ text: PROMPT });
-
-    const response = await ai.models.generateContent({
-      model: 'gemini-2.5-flash',
-      contents: [{ role: 'user', parts }],
-      config: {
-        responseMimeType: 'application/json',
-      },
-    });
-
-    const text = response.text || '';
-    if (!text) {
-      console.error('Gemini API: empty response');
-      return NextResponse.json({ error: 'Empty response from model' }, { status: 500 });
-    }
-
-    let parsed: Record<string, unknown>;
-    try {
-      parsed = JSON.parse(text);
-    } catch (parseErr) {
-      console.error('Gemini API: JSON parse failed. Raw text:', text, 'Error:', parseErr);
-      return NextResponse.json({ error: 'Failed to parse response' }, { status: 500 });
-    }
-
-    const items = (Array.isArray(parsed.items) ? parsed.items : []).map((item: Record<string, unknown>) => ({
-      name: String(item.name || ''),
-      calories: Number(item.calories) || 0,
-      protein: Number(item.protein) || 0,
-      carbs: Number(item.carbs) || 0,
-      fat: Number(item.fat) || 0,
-    }));
-
-    return NextResponse.json({
-      calories: Number(parsed.calories) || 0,
-      protein: Number(parsed.protein) || 0,
-      carbs: Number(parsed.carbs) || 0,
-      fat: Number(parsed.fat) || 0,
-      items,
-    });
-
-  } catch (e) {
-    const raw = e instanceof Error ? e.message : String(e);
-    console.error('Gemini API error:', raw);
-
-    // Return 429 with retryAfter so the client can handle the countdown
-    const retryAfterSec = parseRetryAfterSec(raw);
-    if (retryAfterSec !== null) {
-      return NextResponse.json(
-        { error: 'RATE_LIMITED', retryAfter: retryAfterSec },
-        { status: 429 }
-      );
-    }
-
-    return NextResponse.json({ error: extractErrorDetail(raw) }, { status: 500 });
   }
+
+  if (description) {
+    parts.push({ text: `食事の説明: ${description}` });
+  }
+
+  parts.push({ text: PROMPT });
+
+  let lastError = '';
+
+  for (const model of MODELS) {
+    try {
+      console.log(`Trying model: ${model}`);
+      const response = await ai.models.generateContent({
+        model,
+        contents: [{ role: 'user', parts }],
+        config: {
+          responseMimeType: 'application/json',
+          thinkingConfig: { thinkingBudget: 0 },
+        },
+      });
+
+      const text = response.text || '';
+      if (!text) {
+        console.error(`${model}: empty response`);
+        lastError = 'Empty response from model';
+        continue; // try next model
+      }
+
+      let parsed: Record<string, unknown>;
+      try {
+        parsed = JSON.parse(text);
+      } catch (parseErr) {
+        console.error(`${model}: JSON parse failed. Raw:`, text, parseErr);
+        lastError = 'Failed to parse response';
+        continue; // try next model
+      }
+
+      const items = (Array.isArray(parsed.items) ? parsed.items : []).map((item: Record<string, unknown>) => ({
+        name: String(item.name || ''),
+        calories: Number(item.calories) || 0,
+        protein: Number(item.protein) || 0,
+        carbs: Number(item.carbs) || 0,
+        fat: Number(item.fat) || 0,
+      }));
+
+      console.log(`Success with model: ${model}`);
+      return NextResponse.json({
+        calories: Number(parsed.calories) || 0,
+        protein: Number(parsed.protein) || 0,
+        carbs: Number(parsed.carbs) || 0,
+        fat: Number(parsed.fat) || 0,
+        items,
+      });
+
+    } catch (e) {
+      const raw = e instanceof Error ? e.message : String(e);
+      console.error(`${model} error:`, raw);
+      lastError = raw;
+
+      // Rate limited: return immediately so client can show countdown
+      const retryAfterSec = parseRetryAfterSec(raw);
+      if (retryAfterSec !== null) {
+        return NextResponse.json(
+          { error: 'RATE_LIMITED', retryAfter: retryAfterSec },
+          { status: 429 }
+        );
+      }
+
+      // Model overloaded: try next model in the list
+      if (isModelUnavailable(raw)) {
+        console.log(`${model} unavailable, trying next...`);
+        continue;
+      }
+
+      // Any other error (auth, invalid request, etc.): return immediately
+      return NextResponse.json({ error: extractErrorDetail(raw) }, { status: 500 });
+    }
+  }
+
+  // All models failed
+  return NextResponse.json(
+    { error: extractErrorDetail(lastError) || 'All models are currently unavailable. Please try again later.' },
+    { status: 503 }
+  );
 }

@@ -1,5 +1,14 @@
 import { Nutrition } from '@/types';
 
+export class RateLimitError extends Error {
+  retryAfter: number;
+  constructor(retryAfter: number) {
+    super(`rate_limited`);
+    this.name = 'RateLimitError';
+    this.retryAfter = retryAfter + 1; // +1s buffer
+  }
+}
+
 export async function analyzeFood(
   options: { imageBase64?: string; description?: string },
   apiKey?: string
@@ -12,6 +21,12 @@ export async function analyzeFood(
     },
     body: JSON.stringify(options),
   });
+
+  if (res.status === 429) {
+    const body = await res.json().catch(() => ({}));
+    const retryAfter = typeof body.retryAfter === 'number' ? body.retryAfter : 30;
+    throw new RateLimitError(retryAfter);
+  }
 
   if (!res.ok) {
     let errMsg = 'Analysis failed';

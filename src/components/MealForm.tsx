@@ -30,6 +30,8 @@ interface Props {
   onCancel?: () => void;
 }
 
+const DRAFT_KEY = 'meal-draft';
+
 export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const { t } = useTranslation();
   const { profile } = useAuth();
@@ -43,24 +45,36 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     return 'snack';
   };
 
-  const [mealType, setMealType] = useState<MealType>(editMeal?.type || getDefaultMealType());
-  const [description, setDescription] = useState(editMeal?.description || '');
+  // Load draft once from localStorage (only for new meals, not edits)
+  const [draft] = useState<{
+    mealType?: MealType;
+    description?: string;
+    nutrition?: Nutrition;
+    foodItems?: FoodItem[];
+  } | null>(() => {
+    if (editMeal) return null;
+    try { return JSON.parse(localStorage.getItem(DRAFT_KEY) || 'null'); }
+    catch { return null; }
+  });
+
+  const [mealType, setMealType] = useState<MealType>(editMeal?.type || draft?.mealType || getDefaultMealType());
+  const [description, setDescription] = useState(editMeal?.description || draft?.description || '');
   const [photos, setPhotos] = useState<string[]>(() => {
     if (editMeal?.photos?.length) return editMeal.photos;
     if (editMeal?.photoBase64) return [editMeal.photoBase64];
     return [];
   });
   const [nutrition, setNutrition] = useState<Nutrition>(
-    editMeal?.nutrition || { calories: 0, protein: 0, carbs: 0, fat: 0 }
+    editMeal?.nutrition || draft?.nutrition || { calories: 0, protein: 0, carbs: 0, fat: 0 }
   );
   const [analyzing, setAnalyzing] = useState(false);
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
   const [hasServerKey, setHasServerKey] = useState(false);
-  const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
+  const [foodItems, setFoodItems] = useState<FoodItem[]>(draft?.foodItems || []);
   const [originalItems, setOriginalItems] = useState<FoodItem[] | null>(null);
-  const [showItems, setShowItems] = useState(false);
+  const [showItems, setShowItems] = useState((draft?.foodItems?.length ?? 0) > 0);
 
   useEffect(() => {
     fetch('/api/apikey-status')
@@ -68,6 +82,12 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       .then(data => setHasServerKey(data.hasServerKey))
       .catch(() => {});
   }, []);
+
+  // Persist draft to localStorage so it survives app updates/refreshes
+  useEffect(() => {
+    if (editMeal) return;
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ mealType, description, nutrition, foodItems }));
+  }, [mealType, description, nutrition, foodItems, editMeal]);
 
   // Countdown timer for rate limit — does NOT auto-retry to avoid infinite loops
   useEffect(() => {
@@ -233,6 +253,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       await onSave(meal);
       setSaved(true);
       if (!editMeal) {
+        localStorage.removeItem(DRAFT_KEY);
         setDescription('');
         setPhotos([]);
         setNutrition({ calories: 0, protein: 0, carbs: 0, fat: 0 });

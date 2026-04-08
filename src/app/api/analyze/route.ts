@@ -70,7 +70,7 @@ export async function POST(request: NextRequest) {
     parts.push({ text: PROMPT });
 
     const response = await ai.models.generateContent({
-      model: 'gemini-2.0-flash',
+      model: 'gemini-2.5-flash',
       contents: [{ role: 'user', parts }],
       config: {
         responseMimeType: 'application/json',

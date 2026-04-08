@@ -57,7 +57,6 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   const [error, setError] = useState('');
   const [saved, setSaved] = useState(false);
   const [retryCountdown, setRetryCountdown] = useState<number | null>(null);
-  const handleAnalyzeRef = useRef<() => void>(() => {});
   const [hasServerKey, setHasServerKey] = useState(false);
   const [foodItems, setFoodItems] = useState<FoodItem[]>([]);
   const [originalItems, setOriginalItems] = useState<FoodItem[] | null>(null);
@@ -70,19 +69,13 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       .catch(() => {});
   }, []);
 
-  // Countdown timer for rate limit: auto-retries when it reaches 0
+  // Countdown timer for rate limit — does NOT auto-retry to avoid infinite loops
   useEffect(() => {
     if (retryCountdown === null || retryCountdown <= 0) return;
-    const timer = setTimeout(() => {
-      setRetryCountdown(c => {
-        if (c === null || c <= 1) {
-          // Last tick: schedule the retry after state update
-          setTimeout(() => handleAnalyzeRef.current(), 0);
-          return null;
-        }
-        return c - 1;
-      });
-    }, 1000);
+    const timer = setTimeout(
+      () => setRetryCountdown(c => (c !== null && c > 1 ? c - 1 : null)),
+      1000
+    );
     return () => clearTimeout(timer);
   }, [retryCountdown]);
 
@@ -159,9 +152,6 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
       setAnalyzing(false);
     }
   };
-
-  // Always point to latest handleAnalyze to avoid stale closure in countdown effect
-  handleAnalyzeRef.current = handleAnalyze;
 
   const updateItem = (index: number, field: keyof FoodItem, value: string | number) => {
     const updated = [...foodItems];
@@ -330,14 +320,14 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
 
       {/* AI Analyze */}
       <button
-        onClick={retryCountdown === null ? handleAnalyze : undefined}
+        onClick={handleAnalyze}
         disabled={analyzing || retryCountdown !== null || (photos.length === 0 && !description)}
         className="w-full py-2 bg-purple-600 text-white rounded-lg font-medium hover:bg-purple-700 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
       >
         {analyzing
           ? t('log.analyzing')
           : retryCountdown !== null
-            ? `${retryCountdown}秒後に再試行...`
+            ? `${retryCountdown}秒後に再試行できます`
             : t('log.analyze')}
       </button>
       {error && <p className="text-red-600 text-sm font-medium bg-red-50 rounded-lg px-3 py-2">{error}</p>}

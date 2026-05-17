@@ -56,13 +56,13 @@ export default function LogPage() {
     setLoading(true);
     const rec = await getDailyRecord(user.uid, selectedDate);
     setRecord(rec);
+    setLoading(false);
     if (rec.weight == null) {
       const prev = await getLastRecordedWeight(user.uid, selectedDate);
       setLastWeight(prev);
     } else {
       setLastWeight(undefined);
     }
-    setLoading(false);
   }, [user, selectedDate]);
 
   useEffect(() => { loadRecord(); }, [loadRecord]);

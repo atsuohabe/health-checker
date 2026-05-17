@@ -47,7 +47,6 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
 
   // Load draft once from localStorage (only for new meals, not edits)
   const [draft] = useState<{
-    mealType?: MealType;
     description?: string;
     nutrition?: Nutrition;
     foodItems?: FoodItem[];
@@ -57,7 +56,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     catch { return null; }
   });
 
-  const [mealType, setMealType] = useState<MealType>(editMeal?.type || draft?.mealType || getDefaultMealType());
+  const [mealType, setMealType] = useState<MealType>(editMeal?.type || getDefaultMealType());
   const [description, setDescription] = useState(editMeal?.description || draft?.description || '');
   const [photos, setPhotos] = useState<string[]>(() => {
     if (editMeal?.photos?.length) return editMeal.photos;
@@ -86,8 +85,8 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
   // Persist draft to localStorage so it survives app updates/refreshes
   useEffect(() => {
     if (editMeal) return;
-    localStorage.setItem(DRAFT_KEY, JSON.stringify({ mealType, description, nutrition, foodItems }));
-  }, [mealType, description, nutrition, foodItems, editMeal]);
+    localStorage.setItem(DRAFT_KEY, JSON.stringify({ description, nutrition, foodItems }));
+  }, [description, nutrition, foodItems, editMeal]);
 
   // Countdown timer for rate limit — does NOT auto-retry to avoid infinite loops
   useEffect(() => {

@@ -28,22 +28,15 @@ interface Props {
   onSave: (meal: MealEntry) => void | Promise<void>;
   editMeal?: MealEntry | null;
   onCancel?: () => void;
+  defaultMealType?: MealType;
 }
 
 const DRAFT_KEY = 'meal-draft';
 
-export default function MealForm({ onSave, editMeal, onCancel }: Props) {
+export default function MealForm({ onSave, editMeal, onCancel, defaultMealType }: Props) {
   const { t } = useTranslation();
   const { profile } = useAuth();
   const fileRef = useRef<HTMLInputElement>(null);
-
-  const getDefaultMealType = (): MealType => {
-    const hour = new Date().getHours();
-    if (hour < 10) return 'breakfast';
-    if (hour < 15) return 'lunch';
-    if (hour < 21) return 'dinner';
-    return 'snack';
-  };
 
   // Load draft once from localStorage (only for new meals, not edits)
   const [draft] = useState<{
@@ -56,7 +49,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     catch { return null; }
   });
 
-  const [mealType, setMealType] = useState<MealType>(editMeal?.type || getDefaultMealType());
+  const [mealType, setMealType] = useState<MealType>(editMeal?.type || defaultMealType || 'breakfast');
   const [description, setDescription] = useState(editMeal?.description || draft?.description || '');
   const [photos, setPhotos] = useState<string[]>(() => {
     if (editMeal?.photos?.length) return editMeal.photos;

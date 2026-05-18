@@ -1,4 +1,4 @@
-import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, where } from 'firebase/firestore';
+import { doc, getDoc, setDoc, collection, getDocs, query, orderBy, where, limit } from 'firebase/firestore';
 import { getFirebaseDb } from './firebase';
 import { DailyRecord, MealEntry, UserProfile } from '@/types';
 import { DEFAULT_TARGET_CALORIES, DEFAULT_TARGET_CARBS, DEFAULT_TARGET_FAT, DEFAULT_TARGET_PROTEIN } from './constants';
@@ -95,19 +95,20 @@ export async function getRecordsInRange(uid: string, startDate: string, endDate:
 }
 
 export async function getLastRecordedWeight(uid: string, beforeDate: string): Promise<number | undefined> {
-  const startDate = (() => {
-    const [y, m, d] = beforeDate.split('-').map(Number);
-    const date = new Date(y, m - 1, d - 90);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  })();
-  const endDate = (() => {
-    const [y, m, d] = beforeDate.split('-').map(Number);
-    const date = new Date(y, m - 1, d - 1);
-    return `${date.getFullYear()}-${String(date.getMonth() + 1).padStart(2, '0')}-${String(date.getDate()).padStart(2, '0')}`;
-  })();
-  const records = await getRecordsInRange(uid, startDate, endDate);
-  for (let i = records.length - 1; i >= 0; i--) {
-    if (records[i].weight != null) return records[i].weight;
+  const [y, m, d] = beforeDate.split('-').map(Number);
+  const startDate = new Date(y, m - 1, d - 90);
+  const startStr = `${startDate.getFullYear()}-${String(startDate.getMonth() + 1).padStart(2, '0')}-${String(startDate.getDate()).padStart(2, '0')}`;
+  const q = query(
+    collection(getFirebaseDb(), 'users', uid, 'records'),
+    where('date', '>=', startStr),
+    where('date', '<', beforeDate),
+    orderBy('date', 'desc'),
+    limit(30),
+  );
+  const snap = await getDocs(q);
+  for (const docSnap of snap.docs) {
+    const rec = docSnap.data() as DailyRecord;
+    if (rec.weight != null) return rec.weight;
   }
   return undefined;
 }

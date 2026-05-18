@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react';
 import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
 import { getDailyRecord, addMeal, updateMeal, deleteMeal, setWeight, getLastRecordedWeight } from '@/lib/firestore';
-import { DailyRecord, MealEntry } from '@/types';
+import { DailyRecord, MealEntry, MealType } from '@/types';
 import WeightInput from '@/components/WeightInput';
 import MealForm from '@/components/MealForm';
 import MealCard from '@/components/MealCard';
@@ -24,6 +24,14 @@ function shiftDate(dateStr: string, delta: number) {
   const [y, m, d] = dateStr.split('-').map(Number);
   const date = new Date(y, m - 1, d + delta);
   return toLocalDateStr(date);
+}
+
+function getNextMealType(meals: MealEntry[]): MealType {
+  const types = new Set(meals.map(m => m.type));
+  if (!types.has('breakfast')) return 'breakfast';
+  if (!types.has('lunch')) return 'lunch';
+  if (!types.has('dinner')) return 'dinner';
+  return 'snack';
 }
 
 function formatDateLabel(dateStr: string) {
@@ -58,8 +66,9 @@ export default function LogPage() {
     setRecord(rec);
     setLoading(false);
     if (rec.weight == null) {
-      const prev = await getLastRecordedWeight(user.uid, selectedDate);
-      setLastWeight(prev);
+      getLastRecordedWeight(user.uid, selectedDate)
+        .then(prev => setLastWeight(prev))
+        .catch(() => {});
     } else {
       setLastWeight(undefined);
     }
@@ -135,7 +144,11 @@ export default function LogPage() {
             onCancel={() => setEditingMeal(null)}
           />
         ) : (
-          <MealForm key="new" onSave={handleSaveMeal} />
+          <MealForm
+            key={`new-${record.meals.map(m => m.type).join(',')}`}
+            defaultMealType={getNextMealType(record.meals)}
+            onSave={handleSaveMeal}
+          />
         )}
       </div>
 

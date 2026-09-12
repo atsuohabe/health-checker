@@ -44,7 +44,11 @@
     "macroTrend": "營養素趨勢",
     "days7": "7天",
     "days30": "30天",
-    "days90": "90天"
+    "days90": "90天",
+    "weightViewDaily": "每日",
+    "weightViewWeekly": "週平均",
+    "weightWeeklyAvg": "週平均",
+    "weightVsLastWeek": "與上週相比"
   },
   "log": {
     "title": "記錄餐食",

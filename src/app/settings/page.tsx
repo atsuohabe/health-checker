@@ -83,6 +83,26 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
+  // Total calories implied by a macro split (protein/carbs = 4 kcal/g, fat = 9 kcal/g),
+  // clamped and rounded to the nearest 100 to match the calorie select's option grid.
+  const caloriesFromMacros = (p: number, c: number, f: number) => {
+    const raw = p * 4 + c * 4 + f * 9;
+    return Math.min(3800, Math.max(800, Math.round(raw / 100) * 100));
+  };
+
+  const handleProteinChange = (v: number) => {
+    setTargetProtein(v);
+    setTargetCalories(caloriesFromMacros(v, targetCarbs, targetFat));
+  };
+  const handleCarbsChange = (v: number) => {
+    setTargetCarbs(v);
+    setTargetCalories(caloriesFromMacros(targetProtein, v, targetFat));
+  };
+  const handleFatChange = (v: number) => {
+    setTargetFat(v);
+    setTargetCalories(caloriesFromMacros(targetProtein, targetCarbs, v));
+  };
+
   // Estimate BMR using Mifflin-St Jeor if body stats available
   const estimateBmr = (w?: number) => {
     if (!height || !birthYear) return null;
@@ -341,9 +361,9 @@ export default function SettingsPage() {
         <div className="grid grid-cols-2 gap-3">
           {[
             ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)', 800, 3800, 100, 'kcal'],
-            ['targetProtein', targetProtein, setTargetProtein, t('dashboard.protein') + ' (g)', 10, 210, 10, 'g'],
-            ['targetCarbs', targetCarbs, setTargetCarbs, t('dashboard.carbs') + ' (g)', 50, 450, 10, 'g'],
-            ['targetFat', targetFat, setTargetFat, t('dashboard.fat') + ' (g)', 10, 210, 10, 'g'],
+            ['targetProtein', targetProtein, handleProteinChange, t('dashboard.protein') + ' (g)', 10, 210, 10, 'g'],
+            ['targetCarbs', targetCarbs, handleCarbsChange, t('dashboard.carbs') + ' (g)', 50, 450, 10, 'g'],
+            ['targetFat', targetFat, handleFatChange, t('dashboard.fat') + ' (g)', 10, 210, 10, 'g'],
           ].map(([key, value, setter, label, min, max, step, unit]) => (
             <div key={key as string}>
               <label className="block text-xs font-medium text-gray-700 mb-1">{label as string}</label>

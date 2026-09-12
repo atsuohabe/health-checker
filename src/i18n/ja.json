@@ -44,7 +44,11 @@
     "macroTrend": "栄養素推移",
     "days7": "7日",
     "days30": "30日",
-    "days90": "90日"
+    "days90": "90日",
+    "weightViewDaily": "日次",
+    "weightViewWeekly": "週平均",
+    "weightWeeklyAvg": "週平均",
+    "weightVsLastWeek": "先週比"
   },
   "log": {
     "title": "食事を記録",

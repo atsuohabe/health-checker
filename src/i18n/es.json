@@ -44,7 +44,11 @@
     "macroTrend": "Tendencia de macros",
     "days7": "7d",
     "days30": "30d",
-    "days90": "90d"
+    "days90": "90d",
+    "weightViewDaily": "Diario",
+    "weightViewWeekly": "Media semanal",
+    "weightWeeklyAvg": "Media semanal",
+    "weightVsLastWeek": "vs semana anterior"
   },
   "log": {
     "title": "Registrar comida",

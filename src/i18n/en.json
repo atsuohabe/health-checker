@@ -44,7 +44,11 @@
     "macroTrend": "Macro Trends",
     "days7": "7d",
     "days30": "30d",
-    "days90": "90d"
+    "days90": "90d",
+    "weightViewDaily": "Daily",
+    "weightViewWeekly": "Weekly Avg",
+    "weightWeeklyAvg": "Weekly Avg",
+    "weightVsLastWeek": "vs last week"
   },
   "log": {
     "title": "Log Meal",

@@ -89,34 +89,52 @@ export default function HistoryPage() {
         <div className="space-y-2">
           {dates.map(date => {
             const rec = records.find(r => r.date === date);
-            const totalCal = rec?.meals.reduce((s, m) => s + m.nutrition.calories, 0) || 0;
+            const totals = (rec?.meals || []).reduce(
+              (acc, m) => ({
+                calories: acc.calories + m.nutrition.calories,
+                protein: acc.protein + m.nutrition.protein,
+                carbs: acc.carbs + m.nutrition.carbs,
+                fat: acc.fat + m.nutrition.fat,
+              }),
+              { calories: 0, protein: 0, carbs: 0, fat: 0 }
+            );
+            const hasMeals = !!rec && rec.meals.length > 0;
             const expanded = expandedDate === date;
 
             return (
               <div key={date} className="bg-white rounded-xl shadow-sm overflow-hidden">
                 <button
                   onClick={() => setExpandedDate(expanded ? null : date)}
-                  className="w-full flex items-center justify-between px-4 py-3 hover:bg-gray-50 transition-colors"
+                  className="w-full flex flex-col gap-1 px-4 py-3 hover:bg-gray-50 transition-colors"
                 >
-                  <div className="flex items-center gap-3">
-                    <span className="text-sm font-medium text-gray-800">{formatDate(date)}</span>
-                    {rec?.weight && (
-                      <span className="text-xs text-gray-500">{rec.weight}kg</span>
-                    )}
+                  <div className="flex items-center justify-between w-full">
+                    <div className="flex items-center gap-3">
+                      <span className="text-sm font-medium text-gray-800">{formatDate(date)}</span>
+                      {rec?.weight && (
+                        <span className="text-xs text-gray-500">{rec.weight}kg</span>
+                      )}
+                    </div>
+                    <div className="flex items-center gap-3">
+                      {hasMeals ? (
+                        <>
+                          <span className="text-sm font-medium text-blue-600">{Math.round(totals.calories)} kcal</span>
+                          <span className="text-xs text-gray-400">{rec!.meals.length} {t('history.meals')}</span>
+                        </>
+                      ) : (
+                        <span className="text-xs text-gray-400">{t('history.noRecords')}</span>
+                      )}
+                      <span className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>
+                        &#9660;
+                      </span>
+                    </div>
                   </div>
-                  <div className="flex items-center gap-3">
-                    {rec && rec.meals.length > 0 ? (
-                      <>
-                        <span className="text-sm font-medium text-blue-600">{Math.round(totalCal)} kcal</span>
-                        <span className="text-xs text-gray-400">{rec.meals.length} {t('history.meals')}</span>
-                      </>
-                    ) : (
-                      <span className="text-xs text-gray-400">{t('history.noRecords')}</span>
-                    )}
-                    <span className={`text-gray-400 transition-transform ${expanded ? 'rotate-180' : ''}`}>
-                      &#9660;
-                    </span>
-                  </div>
+                  {hasMeals && (
+                    <div className="flex gap-3 text-xs text-gray-400">
+                      <span>P {Math.round(totals.protein)}g</span>
+                      <span>C {Math.round(totals.carbs)}g</span>
+                      <span>F {Math.round(totals.fat)}g</span>
+                    </div>
+                  )}
                 </button>
                 {expanded && rec && rec.meals.length > 0 && (
                   <div className="px-4 pb-3 space-y-2">

@@ -6,7 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MealType, Nutrition, MealEntry } from '@/types';
 import { analyzeFood, resizeImage, RateLimitError } from '@/lib/gemini';
 import { savePhotos } from '@/lib/photo-storage';
-import { MEAL_TYPES } from '@/lib/constants';
+import { MEAL_TYPES, caloriesFromMacros, snapToGrid } from '@/lib/constants';
 
 function generateId(): string {
   try {
@@ -178,7 +178,12 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     if (field === 'name') {
       updated[index] = { ...updated[index], name: value as string };
     } else {
-      updated[index] = { ...updated[index], [field]: Number(value) || 0 };
+      const next = { ...updated[index], [field]: Number(value) || 0 };
+      // Changing P/C/F re-derives the item's calories from the macro balance
+      if (field !== 'calories') {
+        next.calories = Math.round(caloriesFromMacros(next.protein, next.carbs, next.fat));
+      }
+      updated[index] = next;
     }
     setFoodItems(updated);
     if (field !== 'name') {
@@ -226,6 +231,15 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
     } else {
       setServingPrompt(index);
     }
+  };
+
+  // Changing P/C/F updates total calories to match the new macro balance
+  const handleNutritionChange = (key: keyof Nutrition, value: number) => {
+    const next = { ...nutrition, [key]: value };
+    if (key !== 'calories') {
+      next.calories = snapToGrid(caloriesFromMacros(next.protein, next.carbs, next.fat), 10, 0, 2000);
+    }
+    setNutrition(next);
   };
 
   const handleRecalc = () => {
@@ -474,7 +488,7 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
               </label>
               <select
                 value={nutrition[key]}
-                onChange={e => setNutrition({ ...nutrition, [key]: Number(e.target.value) })}
+                onChange={e => handleNutritionChange(key, Number(e.target.value))}
                 className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
               >
                 {Array.from({ length: Math.floor((max - min) / step) + 1 }, (_, i) => min + i * step).map(v => (

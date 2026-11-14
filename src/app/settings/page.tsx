@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
 import { saveUserProfile, getAllRecords, getRecordsInRange } from '@/lib/firestore';
 import { Language, Gender } from '@/types';
+import { caloriesFromMacros, snapToGrid } from '@/lib/constants';
 
 export default function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -83,24 +84,21 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  // Total calories implied by a macro split (protein/carbs = 4 kcal/g, fat = 9 kcal/g),
-  // clamped and rounded to the nearest 100 to match the calorie select's option grid.
-  const caloriesFromMacros = (p: number, c: number, f: number) => {
-    const raw = p * 4 + c * 4 + f * 9;
-    return Math.min(3800, Math.max(800, Math.round(raw / 100) * 100));
-  };
+  // Total calories implied by a macro split, rounded to the calorie select's 100 kcal grid.
+  const syncCalories = (p: number, c: number, f: number) =>
+    setTargetCalories(snapToGrid(caloriesFromMacros(p, c, f), 100, 800, 3800));
 
   const handleProteinChange = (v: number) => {
     setTargetProtein(v);
-    setTargetCalories(caloriesFromMacros(v, targetCarbs, targetFat));
+    syncCalories(v, targetCarbs, targetFat);
   };
   const handleCarbsChange = (v: number) => {
     setTargetCarbs(v);
-    setTargetCalories(caloriesFromMacros(targetProtein, v, targetFat));
+    syncCalories(targetProtein, v, targetFat);
   };
   const handleFatChange = (v: number) => {
     setTargetFat(v);
-    setTargetCalories(caloriesFromMacros(targetProtein, targetCarbs, v));
+    syncCalories(targetProtein, targetCarbs, v);
   };
 
   // Estimate BMR using Mifflin-St Jeor if body stats available

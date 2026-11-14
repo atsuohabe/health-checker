@@ -7,6 +7,7 @@ import { useTranslation } from '@/i18n/context';
 import { saveUserProfile, getAllRecords, getRecordsInRange } from '@/lib/firestore';
 import { Language, Gender } from '@/types';
 import { caloriesFromMacros, snapToGrid } from '@/lib/constants';
+import NumberSelect from '@/components/NumberSelect';
 
 export default function SettingsPage() {
   const { user, profile, signOut, refreshProfile } = useAuth();
@@ -84,9 +85,11 @@ export default function SettingsPage() {
     setTimeout(() => setSaved(false), 2000);
   };
 
-  // Total calories implied by a macro split, rounded to the calorie select's 100 kcal grid.
+  // Total calories implied by a macro split, snapped to the calorie select's 10 kcal grid.
+  // (A 100 kcal grid swallowed most P/C changes: +10 g = +40 kcal often rounded to the same value.)
+  const macroCalories = snapToGrid(caloriesFromMacros(targetProtein, targetCarbs, targetFat), 10, 800, 3800);
   const syncCalories = (p: number, c: number, f: number) =>
-    setTargetCalories(snapToGrid(caloriesFromMacros(p, c, f), 100, 800, 3800));
+    setTargetCalories(snapToGrid(caloriesFromMacros(p, c, f), 10, 800, 3800));
 
   const handleProteinChange = (v: number) => {
     setTargetProtein(v);
@@ -357,26 +360,29 @@ export default function SettingsPage() {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          {[
-            ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)', 800, 3800, 100, 'kcal'],
+          {([
+            ['targetCalories', targetCalories, setTargetCalories, t('dashboard.calories') + ' (kcal)', 800, 3800, 10, 'kcal'],
             ['targetProtein', targetProtein, handleProteinChange, t('dashboard.protein') + ' (g)', 10, 210, 10, 'g'],
             ['targetCarbs', targetCarbs, handleCarbsChange, t('dashboard.carbs') + ' (g)', 50, 450, 10, 'g'],
             ['targetFat', targetFat, handleFatChange, t('dashboard.fat') + ' (g)', 10, 210, 10, 'g'],
-          ].map(([key, value, setter, label, min, max, step, unit]) => (
-            <div key={key as string}>
-              <label className="block text-xs font-medium text-gray-700 mb-1">{label as string}</label>
-              <select
-                value={value as number}
-                onChange={e => (setter as (v: number) => void)(Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                {Array.from({ length: Math.floor(((max as number) - (min as number)) / (step as number)) + 1 }, (_, i) => (min as number) + i * (step as number)).map(v => (
-                  <option key={v} value={v}>{v} {unit as string}</option>
-                ))}
-              </select>
+          ] as const).map(([key, value, setter, label, min, max, step, unit]) => (
+            <div key={key}>
+              <label className="block text-xs font-medium text-gray-700 mb-1">{label}</label>
+              <NumberSelect value={value} onChange={setter} min={min} max={max} step={step} unit={unit} />
             </div>
           ))}
         </div>
+        {targetCalories !== macroCalories && (
+          <div className="flex items-center justify-between gap-2 bg-blue-50 rounded-lg px-3 py-2">
+            <span className="text-xs text-blue-800">{t('settings.macroCalories', { kcal: String(macroCalories) })}</span>
+            <button
+              onClick={() => setTargetCalories(macroCalories)}
+              className="text-xs px-3 py-1.5 bg-blue-600 text-white rounded-md font-medium hover:bg-blue-700 whitespace-nowrap"
+            >
+              {t('settings.recalcCalories')}
+            </button>
+          </div>
+        )}
         <button
           onClick={handleOptimize}
           disabled={optimizing}

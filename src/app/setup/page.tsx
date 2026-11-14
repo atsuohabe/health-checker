@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { useTranslation } from '@/i18n/context';
 import { saveUserProfile } from '@/lib/firestore';
 import { Language } from '@/types';
+import NumberSelect from '@/components/NumberSelect';
 import { DEFAULT_TARGET_CALORIES, DEFAULT_TARGET_PROTEIN, DEFAULT_TARGET_CARBS, DEFAULT_TARGET_FAT, caloriesFromMacros, snapToGrid } from '@/lib/constants';
 
 export default function SetupPage() {
@@ -20,9 +21,9 @@ export default function SetupPage() {
   const [targetFat, setTargetFat] = useState(profile?.targetFat || DEFAULT_TARGET_FAT);
   const [saving, setSaving] = useState(false);
 
-  // Changing P/C/F updates the calorie target (rounded to the 100 kcal option grid)
+  // Changing P/C/F updates the calorie target (snapped to the 10 kcal option grid)
   const syncCalories = (p: number, c: number, f: number) =>
-    setTargetCalories(snapToGrid(caloriesFromMacros(p, c, f), 100, 800, 3800));
+    setTargetCalories(snapToGrid(caloriesFromMacros(p, c, f), 10, 800, 3800));
 
   const handleLanguageChange = (lang: Language) => {
     setLanguage(lang);
@@ -111,39 +112,19 @@ export default function SetupPage() {
             <div className="grid grid-cols-2 gap-3">
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetCalories')}</label>
-                <select value={targetCalories} onChange={e => setTargetCalories(Number(e.target.value))}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                  {Array.from({ length: 31 }, (_, i) => 800 + i * 100).map(v => (
-                    <option key={v} value={v}>{v} kcal</option>
-                  ))}
-                </select>
+                <NumberSelect value={targetCalories} onChange={v => setTargetCalories(v)} min={800} max={3800} step={10} unit="kcal" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetProtein')}</label>
-                <select value={targetProtein} onChange={e => { const v = Number(e.target.value); setTargetProtein(v); syncCalories(v, targetCarbs, targetFat); }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                  {Array.from({ length: 21 }, (_, i) => 10 + i * 10).map(v => (
-                    <option key={v} value={v}>{v} g</option>
-                  ))}
-                </select>
+                <NumberSelect value={targetProtein} onChange={v => { setTargetProtein(v); syncCalories(v, targetCarbs, targetFat); }} min={10} max={210} step={10} unit="g" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetCarbs')}</label>
-                <select value={targetCarbs} onChange={e => { const v = Number(e.target.value); setTargetCarbs(v); syncCalories(targetProtein, v, targetFat); }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                  {Array.from({ length: 41 }, (_, i) => 50 + i * 10).map(v => (
-                    <option key={v} value={v}>{v} g</option>
-                  ))}
-                </select>
+                <NumberSelect value={targetCarbs} onChange={v => { setTargetCarbs(v); syncCalories(targetProtein, v, targetFat); }} min={50} max={450} step={10} unit="g" />
               </div>
               <div>
                 <label className="block text-xs font-medium text-gray-700 mb-1">{t('setup.targetFat')}</label>
-                <select value={targetFat} onChange={e => { const v = Number(e.target.value); setTargetFat(v); syncCalories(targetProtein, targetCarbs, v); }}
-                  className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white">
-                  {Array.from({ length: 21 }, (_, i) => 10 + i * 10).map(v => (
-                    <option key={v} value={v}>{v} g</option>
-                  ))}
-                </select>
+                <NumberSelect value={targetFat} onChange={v => { setTargetFat(v); syncCalories(targetProtein, targetCarbs, v); }} min={10} max={210} step={10} unit="g" />
               </div>
             </div>
 

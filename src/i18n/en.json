@@ -137,6 +137,8 @@
     "darkMode": "Dark Mode",
     "goalHelp": "Selecting a goal auto-fills the targets below. Press Save to apply.",
     "optimizeTargets": "Optimize targets from past data",
+    "macroCalories": "From P/C/F: {kcal} kcal",
+    "recalcCalories": "Recalculate calories",
     "optimizeNoData": "Not enough data (at least 3 days required)",
     "optimizeDone": "Targets updated based on {days} days of data. Press Save to apply.",
     "optimizeError": "Optimization failed"

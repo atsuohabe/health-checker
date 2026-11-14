@@ -137,6 +137,8 @@
     "darkMode": "深色模式",
     "goalHelp": "選擇目標後會自動填入下方數值，請按儲存以套用。",
     "optimizeTargets": "根據過去資料優化目標值",
+    "macroCalories": "依 PCF 計算：{kcal} kcal",
+    "recalcCalories": "重新計算熱量",
     "optimizeNoData": "資料不足（至少需要3天）",
     "optimizeDone": "已根據過去{days}天的資料更新目標值。請按儲存。",
     "optimizeError": "優化失敗"

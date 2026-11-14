@@ -6,6 +6,7 @@ import { useAuth } from '@/hooks/useAuth';
 import { MealType, Nutrition, MealEntry } from '@/types';
 import { analyzeFood, resizeImage, RateLimitError } from '@/lib/gemini';
 import { savePhotos } from '@/lib/photo-storage';
+import NumberSelect from './NumberSelect';
 import { MEAL_TYPES, caloriesFromMacros, snapToGrid } from '@/lib/constants';
 
 function generateId(): string {
@@ -486,15 +487,14 @@ export default function MealForm({ onSave, editMeal, onCancel }: Props) {
               <label className="block text-xs text-gray-500 mb-1">
                 {t(`dashboard.${key}`)} ({unit})
               </label>
-              <select
+              <NumberSelect
                 value={nutrition[key]}
-                onChange={e => handleNutritionChange(key, Number(e.target.value))}
-                className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent bg-white"
-              >
-                {Array.from({ length: Math.floor((max - min) / step) + 1 }, (_, i) => min + i * step).map(v => (
-                  <option key={v} value={v}>{v} {unit}</option>
-                ))}
-              </select>
+                onChange={v => handleNutritionChange(key, v)}
+                min={min}
+                max={max}
+                step={step}
+                unit={unit}
+              />
             </div>
           ))}
         </div>

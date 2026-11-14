@@ -137,6 +137,8 @@
     "darkMode": "ダークモード",
     "goalHelp": "選択すると目標値が自動で設定されます。保存を押して反映してください。",
     "optimizeTargets": "過去データから目標値を最適化",
+    "macroCalories": "PCFから計算: {kcal} kcal",
+    "recalcCalories": "カロリーを再計算",
     "optimizeNoData": "データが不足しています（最低3日分必要）",
     "optimizeDone": "過去{days}日分のデータを元に目標値を更新しました。保存ボタンを押してください。",
     "optimizeError": "最適化に失敗しました"

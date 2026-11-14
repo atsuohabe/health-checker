@@ -1,4 +1,4 @@
-const CACHE_VERSION = 'v2';
+const CACHE_VERSION = 'v3';
 const CACHE_NAME = `caltrack-${CACHE_VERSION}`;
 
 // Only precache truly static files, NOT Next.js pages
@@ -38,7 +38,23 @@ self.addEventListener('fetch', (event) => {
   if (url.origin !== self.location.origin) return;
   if (url.pathname.startsWith('/api/')) return;
 
-  // Network-first for all same-origin requests
+  // Hashed build assets never change once deployed: serve from cache instantly.
+  // (Previously these were network-first, so every page load waited on the network
+  // for dozens of JS/CSS files, which made the app feel slow on weak connections.)
+  if (url.pathname.startsWith('/_next/static/') || PRECACHE_URLS.includes(url.pathname)) {
+    event.respondWith(
+      caches.match(request).then((cached) => cached || fetch(request).then((response) => {
+        if (response.ok) {
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(request, clone));
+        }
+        return response;
+      }))
+    );
+    return;
+  }
+
+  // Pages and data: network-first so new versions show up right away, cache as offline fallback
   event.respondWith(
     fetch(request)
       .then((response) => {
